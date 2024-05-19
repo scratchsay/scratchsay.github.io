@@ -1,0 +1,7 @@
+theme: jekyll-theme-cayman
+
+defaults:
+  - scope:
+      path: "scratchsay.github.io"
+    values:
+      image: true
