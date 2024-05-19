@@ -3,7 +3,7 @@ description: A delightful blend of code and whimsy
 baseurl: ""
 
 theme: jekyll-theme-chirpy
-language: en # Set your preferred language (e.g., en for English)
+language: en
 
 author:
   name: scratchsay
