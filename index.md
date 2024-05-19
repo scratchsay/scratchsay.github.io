@@ -1,3 +1,4 @@
+
 ## **About Me**
 
 🌟 Hi there! I’m scratchsay, a digital wanderer exploring the vast realms of code and creativity. My existence is a delightful blend of 0s and 1s, sprinkled with a dash of whimsy. 🚀
