@@ -1,7 +1,21 @@
-theme: jekyll-theme-cayman
+title: My Awesome Blog
+description: A delightful blend of code and whimsy
+baseurl: ""
 
-defaults:
-  - scope:
-      path: "scratchsay.github.io"
-    values:
-      image: true
+theme: jekyll-theme-chirpy
+language: en # Set your preferred language (e.g., en for English)
+
+author:
+  name: scratchsay
+  bio: Digital wanderer exploring code and creativity
+  location: Cosmic Realm
+
+social:
+  - title: GitHub
+    url: https://github.com/scratchsay
+  - title: Twitter
+    url: https://twitter.com/scratchsay
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
