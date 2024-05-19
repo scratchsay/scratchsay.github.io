@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bedwars Leaderboard</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+  <div id="leaderboard"></div>
+
+  <script>
+    var usernames = ["Lelitzpanda", "WarOG", "Manhal_IQ_", "nobmo", "SixtoTheGreat", "RRG_", "Wlnks", "xLectroLiqhtnin", "Hashito", "Jqsie"];
+    var wins = ["58,343", "55,719", "48,358", "45,806", "45,600", "45,537", "42,725", "42,480", "40,526", "40,000"];
+
+    function generateTable(usernames, wins) {
+      var table = document.createElement("table");
+      table.className = "leaderboard";
+      var thead = document.createElement("thead");
+      var tbody = document.createElement("tbody");
+
+      thead.innerHTML = "<tr><th>Position</th><th>Player</th><th>Wins</th></tr>";
+
+      usernames.forEach((username, index) => {
+        var row = document.createElement("tr");
+
+        var positionCell = document.createElement("td");
+        positionCell.textContent = (index + 1) + ".";
+        row.appendChild(positionCell);
+
+        var playerCell = document.createElement("td");
+        playerCell.textContent = username;
+        row.appendChild(playerCell);
+
+        var winsCell = document.createElement("td");
+        winsCell.textContent = wins[index];
+        row.appendChild(winsCell);
+
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+
+      return table;
+    }
+
+    var leaderboardContainer = document.getElementById("leaderboard");
+    leaderboardContainer.appendChild(generateTable(usernames, wins));
+  </script>
+</body>
+</html>
