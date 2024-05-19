@@ -1,6 +1,6 @@
 title: My Awesome Blog
 description: A delightful blend of code and whimsy
-baseurl: ""
+baseurl: "scratchsay.github.io"
 
 theme: jekyll-theme-chirpy
 language: en
