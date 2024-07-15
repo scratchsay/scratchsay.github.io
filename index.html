@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dump Find</title>
+    <style>
+        #text {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>scratchsay blog</h1>
+    <input type="text" id="searchQuery" placeholder="Enter search query">
+    <button onclick="dumpFind()">Find Opinion</button>
+    <p id="result"></p>
+
+    <p id="text">
+        Someone seeks to hurt but doesn't seek pain for its own sake. Concentration is something that must be achieved through effort and dedication. It's not an easy feat; it requires diligent work and persistence. Similarly, pain is something that must be worked through over time. It must be faced and endured, as it is what it is, not something that can be overcome easily.
+    </p>
+
+    <script>
+        function dumpFind() {
+            const text = document.getElementById('text').innerText;
+            const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
+            
+            if (searchQuery === '') {
+                document.getElementById('result').innerText = 'Most relevant sentence:';
+                return;
+            }
+
+            const sentences = text.split('. ');
+
+            let bestMatch = '';
+            let highestMatchCount = 0;
+
+            sentences.forEach(sentence => {
+                const words = sentence.toLowerCase().split(/\W+/);
+                let matchCount = 0;
+
+                words.forEach(word => {
+                    if (searchQuery === word) {
+                        matchCount++;
+                    }
+                });
+
+                if (matchCount > highestMatchCount) {
+                    highestMatchCount = matchCount;
+                    bestMatch = sentence;
+                }
+            });
+
+            const resultText = highestMatchCount > 0 ? `Most relevant sentence: ${bestMatch}.` : "Most relevant sentence:";
+            document.getElementById('result').innerText = resultText;
+        }
+    </script>
+</body>
+</html>
