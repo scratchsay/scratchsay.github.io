@@ -26,7 +26,7 @@
             const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
             
             if (searchQuery === '') {
-                document.getElementById('result').innerText = 'Most relevant sentence:';
+                document.getElementById('result').innerText = 'Requires more text';
                 return;
             }
 
@@ -51,7 +51,7 @@
                 }
             });
 
-            const resultText = highestMatchCount > 0 ? `Most relevant sentence: ${bestMatch}.` : "Most relevant sentence:";
+            const resultText = highestMatchCount > 0 ? `Most relevant opinion: ${bestMatch}.` : "No relevant opinion";
             document.getElementById('result').innerText = resultText;
         }
     </script>
