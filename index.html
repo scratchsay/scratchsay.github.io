@@ -1,59 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dump Find</title>
-    <style>
-        #text {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>scratchsay</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f0f8ff, #e0ffff);
+      color: #333;
+      padding: 40px;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      color: #4a90e2;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 2px #ccc;
+    }
+
+    .achievement {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.2em;
+      color: #2d6a4f;
+      background-color: #d8f3dc;
+      padding: 10px 20px;
+      display: inline-block;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      font-weight: 600;
+    }
+
+    .achievement-icon {
+      font-size: 2em;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .future-achievements {
+      text-align: center;
+      margin: 10px 0 30px;
+    }
+
+    .future-achievement {
+      display: inline-block;
+      background-color: #fff3cd;
+      color: #856404;
+      border-radius: 10px;
+      padding: 8px 16px;
+      margin: 5px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .future-achievement:hover {
+      transform: scale(1.05);
+      background-color: #ffec99;
+    }
+
+    ul {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      list-style-type: none;
+    }
+
+    li {
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #f7f9fc;
+      border-left: 5px solid #4a90e2;
+      transition: background-color 0.3s ease;
+    }
+
+    li:hover {
+      background-color: #e6f2ff;
+    }
+  </style>
 </head>
 <body>
-    <h1>scratchsay blog</h1>
-    <input type="text" id="searchQuery" placeholder="Enter search query">
-    <button onclick="dumpFind()">Find Opinion</button>
-    <p id="result"></p>
 
-    <p id="text">
-        Someone seeks to hurt but doesn't seek pain for its own sake. Concentration is something that must be achieved through effort and dedication. It's not an easy feat; it requires diligent work and persistence. Similarly, pain is something that must be worked through over time. It must be faced and endured, as it is what it is, not something that can be overcome easily.
-    </p>
+  <h1>Hey, it's scratchsay!</h1>
 
-    <script>
-        function dumpFind() {
-            const text = document.getElementById('text').innerText;
-            const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
-            
-            if (searchQuery === '') {
-                document.getElementById('result').innerText = 'Requires more text';
-                return;
-            }
+  <div class="achievement">
+    <span class="achievement-icon">🎯</span>
+    INFP unlocked – try it all, find it all
+  </div>
 
-            const sentences = text.split('. ');
+  <div class="future-achievements">
+    <div class="future-achievement">Start a blog</div>
+    <div class="future-achievement">Write a novel</div>
+    <div class="future-achievement">Learn some Rust</div>
+  </div>
 
-            let bestMatch = '';
-            let highestMatchCount = 0;
+  <ul>
+    <li>I like coding</li>
+    <li>I also like reading</li>
+    <li>I also like writing</li>
+    <li>I also like gaming</li>
+    <li>I also like debating</li>
+    <li>I also like singing</li>
+    <li>I also like swimming</li>
+  </ul>
 
-            sentences.forEach(sentence => {
-                const words = sentence.toLowerCase().split(/\W+/);
-                let matchCount = 0;
-
-                words.forEach(word => {
-                    if (searchQuery === word) {
-                        matchCount++;
-                    }
-                });
-
-                if (matchCount > highestMatchCount) {
-                    highestMatchCount = matchCount;
-                    bestMatch = sentence;
-                }
-            });
-
-            const resultText = highestMatchCount > 0 ? `Most relevant opinion: ${bestMatch}.` : "No relevant opinion";
-            document.getElementById('result').innerText = resultText;
-        }
-    </script>
 </body>
 </html>
