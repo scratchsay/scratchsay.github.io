@@ -24,6 +24,10 @@
     .achievement {
       text-align: center;
       margin-bottom: 20px;
+    }
+
+    .achievement a {
+      text-decoration: none;
       font-size: 1.2em;
       color: #2d6a4f;
       background-color: #d8f3dc;
@@ -32,6 +36,11 @@
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+
+    .achievement a:hover {
+      background-color: #b7e4c7;
     }
 
     .achievement-icon {
@@ -90,8 +99,10 @@
   <h1>Hey, it's scratchsay!</h1>
 
   <div class="achievement">
-    <span class="achievement-icon">🎯</span>
-    INFP unlocked – try it all, find it all
+    <a href="https://www.16personalities.com/profiles/3cf740eaafb78" target="_blank">
+      <span class="achievement-icon">🎯</span>
+      INFP unlocked – try it all, find it all
+    </a>
   </div>
 
   <div class="future-achievements">
