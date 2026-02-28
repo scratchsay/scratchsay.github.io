@@ -1,125 +1,292 @@
-<!DOCTYPE html>
+<!--
+  Daily Counter Tracker
+  Built with help from AI (ChatGPT).
+  You can host this on GitHub Pages.
+-->
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>scratchsay</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily Counters</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #f0f8ff, #e0ffff);
-      color: #333;
-      padding: 40px;
-      margin: 0;
-    }
-
-    h1 {
-      text-align: center;
-      color: #4a90e2;
-      font-size: 2.5em;
-      margin-bottom: 10px;
-      text-shadow: 1px 1px 2px #ccc;
-    }
-
-    .achievement {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .achievement a {
-      text-decoration: none;
-      font-size: 1.2em;
-      color: #2d6a4f;
-      background-color: #d8f3dc;
-      padding: 10px 20px;
-      display: inline-block;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-
-    .achievement a:hover {
-      background-color: #b7e4c7;
-    }
-
-    .achievement-icon {
-      font-size: 2em;
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .future-achievements {
-      text-align: center;
-      margin: 10px 0 30px;
-    }
-
-    .future-achievement {
-      display: inline-block;
-      background-color: #fff3cd;
-      color: #856404;
-      border-radius: 10px;
-      padding: 8px 16px;
-      margin: 5px;
-      font-weight: 500;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s ease;
-    }
-
-    .future-achievement:hover {
-      transform: scale(1.05);
-      background-color: #ffec99;
-    }
-
-    ul {
-      max-width: 500px;
-      margin: auto;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      list-style-type: none;
-    }
-
-    li {
-      padding: 10px;
-      margin-bottom: 10px;
-      background-color: #f7f9fc;
-      border-left: 5px solid #4a90e2;
-      transition: background-color 0.3s ease;
-    }
-
-    li:hover {
-      background-color: #e6f2ff;
-    }
+    :root { --bg:#0b0f19; --card:#121a2a; --text:#e8eefc; --muted:#9fb0d0; --btn:#1b2a45; --btn2:#243a61; --danger:#612438; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin:0; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 900px; margin: 32px auto; padding: 0 16px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    .sub { color: var(--muted); margin-bottom: 18px; }
+    .row { display:flex; gap:12px; flex-wrap: wrap; align-items: center; }
+    .card { background: var(--card); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; }
+    input, button { border-radius: 10px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); color: var(--text); padding: 10px 12px; }
+    input[type="date"]{ padding: 9px 12px; }
+    button { cursor:pointer; background: var(--btn); }
+    button:hover { background: var(--btn2); }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .items { display:grid; gap: 10px; margin-top: 14px; }
+    .item { display:flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .name { font-weight: 600; }
+    .controls { display:flex; align-items:center; gap: 8px; }
+    .count { min-width: 44px; text-align:center; font-variant-numeric: tabular-nums; color: var(--text); }
+    .small { font-size: 12px; color: var(--muted); }
+    .spacer { height: 10px; }
+    .history { margin-top: 18px; }
+    .history pre { white-space: pre-wrap; word-break: break-word; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1>Daily Counters</h1>
+    <div class="sub">Track how many times you do each thing per day. Saves locally in your browser.</div>
 
-  <h1>Hey, it's scratchsay!</h1>
+    <div class="card">
+      <div class="row">
+        <label>
+          <div class="small">Date</div>
+          <input id="dateInput" type="date" />
+        </label>
 
-  <div class="achievement">
-    <a href="https://www.16personalities.com/profiles/3cf740eaafb78" target="_blank">
-      <span class="achievement-icon">🎯</span>
-      INFP unlocked – try it all, find it all
-    </a>
+        <div style="flex:1"></div>
+
+        <button id="resetDayBtn" class="btn-danger" title="Set all counts to 0 for this date">Reset day</button>
+        <button id="exportBtn" title="Copy your saved data to clipboard as JSON">Export JSON</button>
+        <button id="importBtn" title="Paste JSON to restore data">Import JSON</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="row">
+        <input id="newItemName" type="text" placeholder="Add new item (e.g., 'Read 10 pages')" style="flex:1; min-width: 220px;" />
+        <button id="addItemBtn">Add item</button>
+      </div>
+
+      <div class="items" id="items"></div>
+
+      <div class="history">
+        <div class="small">Quick view (this day)</div>
+        <pre id="daySummary"></pre>
+      </div>
+    </div>
   </div>
 
-  <div class="future-achievements">
-    <div class="future-achievement">Start a blog</div>
-    <div class="future-achievement">Write a novel</div>
-    <div class="future-achievement">Learn some Rust</div>
-  </div>
+  <script>
+    // credit to AI (ChatGPT) for helping generate this starter project.
 
-  <ul>
-    <li>I like coding</li>
-    <li>I also like reading</li>
-    <li>I also like writing</li>
-    <li>I also like gaming</li>
-    <li>I also like debating</li>
-    <li>I also like singing</li>
-    <li>I also like swimming</li>
-  </ul>
+    const STORAGE_KEY = "daily_counter_tracker_v1";
 
+    /** Data format:
+     * {
+     *   items: ["Go to Park", "Comment on AP", ...],
+     *   days: {
+     *     "2026-02-27": { "Go to Park": 2, "Comment on AP": 5, ... },
+     *     ...
+     *   }
+     * }
+     */
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function isoTodayLocal() {
+      // Local date in YYYY-MM-DD
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function ensureDay(data, dateStr) {
+      if (!data.days[dateStr]) data.days[dateStr] = {};
+      for (const item of data.items) {
+        if (typeof data.days[dateStr][item] !== "number") data.days[dateStr][item] = 0;
+      }
+    }
+
+    function getSelectedDate() {
+      return document.getElementById("dateInput").value;
+    }
+
+    function setSelectedDate(dateStr) {
+      document.getElementById("dateInput").value = dateStr;
+    }
+
+    function render() {
+      const dateStr = getSelectedDate();
+      ensureDay(state, dateStr);
+
+      const itemsDiv = document.getElementById("items");
+      itemsDiv.innerHTML = "";
+
+      for (const item of state.items) {
+        const count = state.days[dateStr][item] ?? 0;
+
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const left = document.createElement("div");
+        left.innerHTML = `<div class="name"></div>`;
+        left.querySelector(".name").textContent = item;
+
+        const controls = document.createElement("div");
+        controls.className = "controls";
+
+        const minusBtn = document.createElement("button");
+        minusBtn.textContent = "−";
+        minusBtn.title = "Decrease";
+        minusBtn.onclick = () => {
+          state.days[dateStr][item] = Math.max(0, (state.days[dateStr][item] ?? 0) - 1);
+          saveData(state);
+          render();
+        };
+
+        const countSpan = document.createElement("div");
+        countSpan.className = "count";
+        countSpan.textContent = String(count);
+
+        const plusBtn = document.createElement("button");
+        plusBtn.textContent = "+";
+        plusBtn.title = "Increase";
+        plusBtn.onclick = () => {
+          state.days[dateStr][item] = (state.days[dateStr][item] ?? 0) + 1;
+          saveData(state);
+          render();
+        };
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "btn-danger";
+        removeBtn.title = "Remove this item from all days (keeps other items)";
+        removeBtn.onclick = () => {
+          // Remove from items list
+          state.items = state.items.filter(x => x !== item);
+          // Remove from all days
+          for (const d of Object.keys(state.days)) {
+            if (state.days[d] && Object.prototype.hasOwnProperty.call(state.days[d], item)) {
+              delete state.days[d][item];
+            }
+          }
+          saveData(state);
+          render();
+        };
+
+        controls.appendChild(minusBtn);
+        controls.appendChild(countSpan);
+        controls.appendChild(plusBtn);
+        controls.appendChild(removeBtn);
+
+        row.appendChild(left);
+        row.appendChild(controls);
+        itemsDiv.appendChild(row);
+      }
+
+      renderSummary();
+    }
+
+    function renderSummary() {
+      const dateStr = getSelectedDate();
+      ensureDay(state, dateStr);
+
+      const summary = state.items
+        .map(item => `${item}: ${state.days[dateStr][item] ?? 0}`)
+        .join("\n");
+
+      document.getElementById("daySummary").textContent = summary || "(no items yet)";
+    }
+
+    // Initialize state
+    const defaultItems = [
+      "Go to Park",
+      "Comment on AP",
+      "Finish APEX assignment",
+      "Do Strasberg exercise",
+      "Sing song",
+    ];
+
+    let state = loadData() || { items: defaultItems, days: {} };
+    saveData(state);
+
+    // Setup date
+    setSelectedDate(isoTodayLocal());
+
+    // Hook date change
+    document.getElementById("dateInput").addEventListener("change", () => {
+      saveData(state);
+      render();
+    });
+
+    // Add item
+    document.getElementById("addItemBtn").addEventListener("click", () => {
+      const input = document.getElementById("newItemName");
+      const name = input.value.trim();
+      if (!name) return;
+
+      if (!state.items.includes(name)) {
+        state.items.push(name);
+      }
+      input.value = "";
+      saveData(state);
+      render();
+    });
+
+    // Enter key adds item
+    document.getElementById("newItemName").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("addItemBtn").click();
+    });
+
+    // Reset day
+    document.getElementById("resetDayBtn").addEventListener("click", () => {
+      const dateStr = getSelectedDate();
+      ensureDay(state, dateStr);
+      for (const item of state.items) state.days[dateStr][item] = 0;
+      saveData(state);
+      render();
+    });
+
+    // Export
+    document.getElementById("exportBtn").addEventListener("click", async () => {
+      const txt = JSON.stringify(state, null, 2);
+      try {
+        await navigator.clipboard.writeText(txt);
+        alert("Exported to clipboard!");
+      } catch {
+        // fallback
+        prompt("Copy this JSON:", txt);
+      }
+    });
+
+    // Import
+    document.getElementById("importBtn").addEventListener("click", () => {
+      const pasted = prompt("Paste exported JSON here:");
+      if (!pasted) return;
+      try {
+        const obj = JSON.parse(pasted);
+        if (!obj || !Array.isArray(obj.items) || typeof obj.days !== "object") {
+          alert("Invalid format.");
+          return;
+        }
+        state = obj;
+        saveData(state);
+        render();
+        alert("Imported!");
+      } catch {
+        alert("Could not parse JSON.");
+      }
+    });
+
+    // First render
+    render();
+  </script>
 </body>
 </html>
