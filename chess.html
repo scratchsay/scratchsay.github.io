@@ -13,6 +13,24 @@
     overflow-x: hidden;
   }
 
+  /* Back button */
+  .back-btn {
+    position: fixed;
+    left: 10px;
+    top: 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .back-btn:hover {
+    background-color: #c0392b;
+  }
+
   .box {
     width: 300px;
     padding: 20px;
@@ -87,6 +105,9 @@
 
 <body>
 
+<!-- Back Button -->
+<button class="back-btn" onclick="goBack()">← Back</button>
+
 <!-- Puzzles -->
 <div class="box puzzle" onclick="goToPuzzles()">
   Puzzles
@@ -117,6 +138,10 @@
 <script>
 let count = 0;
 let confettiActive = false;
+
+function goBack() {
+  window.location.href = "https://scratchsay.github.io";
+}
 
 function changeCount(amount) {
   count += amount;
