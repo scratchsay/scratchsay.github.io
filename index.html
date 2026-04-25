@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Page</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  .button {
+    padding: 15px 30px;
+    margin: 10px;
+    cursor: pointer;
+    border: none;
+    color: white;
+    font-size: 18px;
+    border-radius: 8px;
+  }
+
+  .blue { background-color: #3498db; }
+  .green { background-color: #2ecc71; }
+  .yellow { background-color: #f1c40f; color: black; }
+  .orange { background-color: #e67e22; }
+  .red { background-color: #e74c3c; }
+
+  .dropdown {
+    display: none;
+    margin-top: 10px;
+  }
+
+  .dropdown div {
+    padding: 10px;
+    margin: 5px auto;
+    width: 200px;
+    background-color: #ddd;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+
+  .dropdown div:hover {
+    background-color: #bbb;
+  }
+
+  /* Info box */
+  .info {
+    margin-top: 40px;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 5px;
+  }
+
+  .tooltip {
+    visibility: hidden;
+    width: 300px;
+    background-color: black;
+    color: #fff;
+    text-align: left;
+    padding: 10px;
+    border-radius: 5px;
+    position: absolute;
+    top: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .info:hover .tooltip {
+    visibility: visible;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- Religion -->
+<button class="button blue" onclick="toggleDropdown('religionDropdown')">
+  Religion
+</button>
+<div id="religionDropdown" class="dropdown">
+  <div onclick="redirect('/christianity')">Christianity</div>
+  <div onclick="redirect('/buddhism')">Buddhism</div>
+</div>
+
+<!-- Hobbies -->
+<button class="button green" onclick="toggleDropdown('hobbyDropdown')">
+  Hobbies
+</button>
+<div id="hobbyDropdown" class="dropdown">
+  <div onclick="redirect('/acting')">Acting</div>
+  <div onclick="redirect('/singing')">Singing</div>
+  <div onclick="redirect('/debate')">Debate</div>
+  <div onclick="redirect('/chess')">Chess</div>
+  <div onclick="redirect('/gym')">Gym</div>
+  <div onclick="redirect('/dance')">Dance</div>
+</div>
+
+<!-- Direct links -->
+<button class="button yellow" onclick="redirect('/social')">
+  Social Calculator
+</button>
+
+<button class="button orange" onclick="redirect('/boundaries')">
+  Boundaries
+</button>
+
+<button class="button red" onclick="redirect('/diet')">
+  Diet
+</button>
+
+<!-- Info Box -->
+<div class="info">
+  Info
+  <div class="tooltip">
+    Follows Maslow's hierarchy of needs.<br>
+    What is that?<br>
+    <a href="https://www.simplypsychology.org/maslow.html" target="_blank" style="color: lightblue;">
+      Learn more
+    </a>
+  </div>
+</div>
+
+<script>
+function toggleDropdown(id) {
+  const el = document.getElementById(id);
+  el.style.display = (el.style.display === "block") ? "none" : "block";
+}
+
+function redirect(path) {
+  window.location.href = path;
+}
+</script>
+
+</body>
+</html>
