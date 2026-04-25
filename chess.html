@@ -10,6 +10,7 @@
     flex-direction: column;
     align-items: center;
     margin-top: 40px;
+    overflow-x: hidden;
   }
 
   .box {
@@ -25,9 +26,14 @@
 
   .puzzle { background-color: #3498db; }
   .opening { background-color: #2ecc71; }
+
+  /* Smaller protip */
   .protip {
     background-color: #f39c12;
     cursor: default;
+    width: 260px;
+    font-size: 14px;
+    padding: 12px;
   }
 
   .counter {
@@ -61,6 +67,21 @@
   .dropdown div:hover {
     background-color: #bbb;
   }
+
+  /* Confetti */
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: fall 3s linear infinite;
+  }
+
+  @keyframes fall {
+    to {
+      transform: translateY(100vh) rotate(360deg);
+    }
+  }
 </style>
 </head>
 
@@ -82,26 +103,32 @@
 </div>
 
 <div id="openingDropdown" class="dropdown">
-  <div onclick="redirect('https://lichess.org/study/PK7F0mR6')">Italian</div>
-  <div onclick="redirect('https://lichess.org/study/XXjMbCvG')">Caro-Kann</div>
-  <div onclick="redirect('https://lichess.org/study/43UCqXd5')">Alekhine</div>
-  <div onclick="redirect('https://lichess.org/study/cIJqFoK7')">Ruy Lopez</div>
+  <div onclick="redirectNew('https://lichess.org/study/PK7F0mR6')">Italian</div>
+  <div onclick="redirectNew('https://lichess.org/study/XXjMbCvG')">Caro-Kann</div>
+  <div onclick="redirectNew('https://lichess.org/study/43UCqXd5')">Alekhine</div>
+  <div onclick="redirectNew('https://lichess.org/study/cIJqFoK7')">Ruy Lopez</div>
 </div>
 
 <!-- Pro Tip -->
 <div class="box protip">
   Protip: Memorize 1 line after every game for the move that you got wrong.
-  This is one of the fastest ways to improve your game!
 </div>
 
 <script>
 let count = 0;
+let confettiActive = false;
 
 function changeCount(amount) {
   count += amount;
   if (count < 0) count = 0;
   if (count > 50) count = 50;
+
   document.getElementById("count").innerText = count;
+
+  if (count === 50 && !confettiActive) {
+    launchConfetti();
+    confettiActive = true;
+  }
 }
 
 function goToPuzzles() {
@@ -113,8 +140,25 @@ function toggleDropdown() {
   el.style.display = (el.style.display === "block") ? "none" : "block";
 }
 
-function redirect(url) {
-  window.location.href = url;
+function redirectNew(url) {
+  window.open(url, "_blank");
+}
+
+/* Confetti function */
+function launchConfetti() {
+  for (let i = 0; i < 100; i++) {
+    const confetti = document.createElement("div");
+    confetti.classList.add("confetti");
+
+    confetti.style.left = Math.random() * 100 + "vw";
+    confetti.style.backgroundColor =
+      "hsl(" + Math.random() * 360 + ", 100%, 50%)";
+    confetti.style.animationDuration = (Math.random() * 2 + 2) + "s";
+
+    document.body.appendChild(confetti);
+
+    setTimeout(() => confetti.remove(), 3000);
+  }
 }
 </script>
 
