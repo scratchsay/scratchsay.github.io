@@ -1,10 +1,35 @@
-<!-- Today's Workout Section -->
-<div id="workoutContainer">
-  <h1 id="mainTitle">Today's Workout</h1>
-  <div id="workoutList"></div>
-</div>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gym Workout</title>
 <style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 40px;
+  }
+
+  /* Back button */
+  .back-btn {
+    position: fixed;
+    left: 10px;
+    top: 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .back-btn:hover {
+    background-color: #c0392b;
+  }
+
   #workoutContainer {
     margin-top: 40px;
     text-align: center;
@@ -36,8 +61,24 @@
     text-decoration: line-through;
   }
 </style>
+</head>
+
+<body>
+
+<!-- Back Button -->
+<button class="back-btn" onclick="goBack()">← Back</button>
+
+<!-- Today's Workout Section -->
+<div id="workoutContainer">
+  <h1 id="mainTitle">Today's Workout</h1>
+  <div id="workoutList"></div>
+</div>
 
 <script>
+function goBack() {
+  window.location.href = "https://scratchsay.github.io";
+}
+
 const workouts = {
   1: { items: ["30x Pushups","2 min Plank","50x Jumping Jacks","10 min Run","3x12 Reps Lift"] },
   2: { items: ["15x Pushups","1 min Plank","100x Jumping Jacks","25 min Run","5 min Tai Chi"] },
@@ -75,3 +116,6 @@ function checkCompletion() {
   }
 }
 </script>
+
+</body>
+</html>
