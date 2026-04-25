@@ -1,0 +1,77 @@
+<!-- Today's Workout Section -->
+<div id="workoutContainer">
+  <h1 id="mainTitle">Today's Workout</h1>
+  <div id="workoutList"></div>
+</div>
+
+<style>
+  #workoutContainer {
+    margin-top: 40px;
+    text-align: center;
+  }
+
+  #mainTitle {
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+
+  .workout-item {
+    background: #2ecc71;
+    color: white;
+    margin: 8px auto;
+    padding: 10px;
+    width: 320px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .checked {
+    text-decoration: line-through;
+    background: #aaa !important;
+  }
+
+  .completed-day .workout-item {
+    background: #888 !important;
+    text-decoration: line-through;
+  }
+</style>
+
+<script>
+const workouts = {
+  1: { items: ["30x Pushups","2 min Plank","50x Jumping Jacks","10 min Run","3x12 Reps Lift"] },
+  2: { items: ["15x Pushups","1 min Plank","100x Jumping Jacks","25 min Run","5 min Tai Chi"] },
+  3: { items: ["40x Pushups","3 min Plank (split)","40x Jumping Jacks","5 min Run","5x8 Reps Lift"] },
+  4: { items: ["5 min Tai Chi","15 min Light Run","1 min Plank","30x Jumping Jacks"] },
+  5: { items: ["25x Pushups","1.5 min Plank","150x Jumping Jacks","15 min Run","4x10 Reps Lift"] },
+  6: { items: ["20x Pushups","2 min Plank","60x Jumping Jacks","40 min Run","5 min Tai Chi"] },
+  0: { items: ["5 min Tai Chi","10 min Walk/Jog","1 min Plank","2x15 Reps Lift (Light)"] }
+};
+
+const today = new Date().getDay();
+const workout = workouts[today];
+
+const list = document.getElementById("workoutList");
+
+workout.items.forEach(item => {
+  const div = document.createElement("div");
+  div.className = "workout-item";
+  div.innerText = item;
+
+  div.onclick = () => {
+    div.classList.toggle("checked");
+    checkCompletion();
+  };
+
+  list.appendChild(div);
+});
+
+function checkCompletion() {
+  const items = document.querySelectorAll(".workout-item");
+  const allChecked = [...items].every(el => el.classList.contains("checked"));
+
+  if (allChecked) {
+    document.getElementById("workoutContainer").classList.add("completed-day");
+  }
+}
+</script>
