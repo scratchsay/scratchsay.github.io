@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chess Training</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 40px;
+  }
+
+  .box {
+    width: 300px;
+    padding: 20px;
+    margin: 15px 0;
+    text-align: center;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    color: white;
+  }
+
+  .puzzle { background-color: #3498db; }
+  .opening { background-color: #2ecc71; }
+  .protip {
+    background-color: #f39c12;
+    cursor: default;
+  }
+
+  .counter {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .counter button {
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .dropdown {
+    display: none;
+    margin-top: 10px;
+  }
+
+  .dropdown div {
+    background-color: #ddd;
+    margin: 5px auto;
+    padding: 10px;
+    border-radius: 5px;
+    width: 250px;
+    cursor: pointer;
+  }
+
+  .dropdown div:hover {
+    background-color: #bbb;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- Puzzles -->
+<div class="box puzzle" onclick="goToPuzzles()">
+  Puzzles
+  <div class="counter" onclick="event.stopPropagation()">
+    <button onclick="changeCount(-1)">-</button>
+    <span id="count">0</span>/50
+    <button onclick="changeCount(1)">+</button>
+  </div>
+</div>
+
+<!-- Opening Strategy -->
+<div class="box opening" onclick="toggleDropdown()">
+  Opening Strategy
+</div>
+
+<div id="openingDropdown" class="dropdown">
+  <div onclick="redirect('https://lichess.org/study/PK7F0mR6')">Italian</div>
+  <div onclick="redirect('https://lichess.org/study/XXjMbCvG')">Caro-Kann</div>
+  <div onclick="redirect('https://lichess.org/study/43UCqXd5')">Alekhine</div>
+  <div onclick="redirect('https://lichess.org/study/cIJqFoK7')">Ruy Lopez</div>
+</div>
+
+<!-- Pro Tip -->
+<div class="box protip">
+  Protip: Memorize 1 line after every game for the move that you got wrong.
+  This is one of the fastest ways to improve your game!
+</div>
+
+<script>
+let count = 0;
+
+function changeCount(amount) {
+  count += amount;
+  if (count < 0) count = 0;
+  if (count > 50) count = 50;
+  document.getElementById("count").innerText = count;
+}
+
+function goToPuzzles() {
+  window.open("https://lichess.org/training", "_blank");
+}
+
+function toggleDropdown() {
+  const el = document.getElementById("openingDropdown");
+  el.style.display = (el.style.display === "block") ? "none" : "block";
+}
+
+function redirect(url) {
+  window.location.href = url;
+}
+</script>
+
+</body>
+</html>
