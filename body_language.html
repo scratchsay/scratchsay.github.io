@@ -1,192 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Body Language Analysis</title>
-
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 40px;
-  }
-
-  /* Back button */
-  .back-btn {
-    position: fixed;
-    left: 10px;
-    top: 20px;
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 16px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
-  .back-btn:hover {
-    background-color: #c0392b;
-  }
-
-  input {
-    padding: 10px;
-    width: 300px;
-    margin-bottom: 15px;
-    font-size: 16px;
-  }
-
-  .filter-btn {
-    padding: 8px 15px;
-    margin: 5px;
-    cursor: pointer;
-    border-radius: 6px;
-    border: none;
-    background: #ddd;
-  }
-
-  .active {
-    background: #3498db;
-    color: white;
-  }
-
-  table {
-    margin: auto;
-    border-collapse: collapse;
-    width: 85%;
-  }
-
-  th, td {
-    border: 1px solid #ccc;
-    padding: 10px;
-  }
-
-  th {
-    background: #f4f4f4;
-  }
-
-  .rarity {
-    position: relative;
-    cursor: pointer;
-  }
-
-  .tooltip {
-    visibility: hidden;
-    background: black;
-    color: white;
-    padding: 5px;
-    border-radius: 5px;
-    position: absolute;
-    top: 120%;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-  }
-
-  .rarity:hover .tooltip {
-    visibility: visible;
-  }
-</style>
-</head>
-
-<body>
-
-<button class="back-btn" onclick="goBack()">← Back</button>
-
-<h2>Body Language Analysis</h2>
-
-<input type="text" id="search" placeholder="Search body language..." onkeyup="renderTable()">
-
-<br>
-
-<button class="filter-btn active" id="ntBtn" onclick="toggleFilter('NT')" title="Neurotypical">NT</button>
-<button class="filter-btn active" id="ndBtn" onclick="toggleFilter('ND')" title="Neurodivergent">ND</button>
-
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Meaning / Social Signal</th>
-<th>Rarity</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
-
 <script>
 function goBack() {
   window.location.href = "https://scratchsay.github.io";
 }
 
 const data = [
-  // --- NT ---
-  {name:"50/70 Eye Contact", meaning:"Shows focus and trust", rarity:"Frequent", percent:"90%", type:"NT"},
-  {name:"Sing Songy Pitch", meaning:"Conveys emotion/sarcasm", rarity:"Frequent", percent:"85%", type:"NT"},
-  {name:"Unconscious Mirroring", meaning:"Builds rapport/liking", rarity:"Common", percent:"70%", type:"NT"},
-  {name:"Small Talk", meaning:"Social grooming/ritual", rarity:"Common", percent:"65%", type:"NT"},
-  {name:"Triple Nod", meaning:"I am following/hurry up", rarity:"Common", percent:"60%", type:"NT"},
-  {name:"Open Torso Orientation", meaning:"Full social engagement", rarity:"Common", percent:"55%", type:"NT"},
-  {name:"Eyebrow Flash", meaning:"Friendly recognition", rarity:"Uncommon", percent:"40%", type:"NT"},
-  {name:"The 'Head Tilt'", meaning:"Showing empathy/listening", rarity:"Common", percent:"50%", type:"NT"},
-  {name:"Hand-to-Face Touching", meaning:"Processing or evaluation", rarity:"Common", percent:"45%", type:"NT"},
-  {name:"Checking the Watch/Phone", meaning:"Signaling desire to leave", rarity:"Common", percent:"40%", type:"NT"},
-  {name:"Leaning In", meaning:"Increased interest/intimacy", rarity:"Common", percent:"50%", type:"NT"},
-  {name:"Side Eye", meaning:"Skepticism or humor", rarity:"Uncommon", percent:"25%", type:"NT"},
-  {name:"Steepling Hands", meaning:"Displaying authority", rarity:"Uncommon", percent:"20%", type:"NT"},
-  {name:"Pursed Lip Withhold", meaning:"Suppressed disagreement", rarity:"Uncommon", percent:"15%", type:"NT"},
-  {name:"Lip Biting", meaning:"Anxiety or anticipation", rarity:"Uncommon", percent:"20%", type:"NT"},
-  {name:"Arm Crossing (Low)", meaning:"Mild discomfort/boundary", rarity:"Common", percent:"45%", type:"NT"},
-  {name:"Foot Jiggling (Standard)", meaning:"Boredom or impatience", rarity:"Common", percent:"40%", type:"NT"},
-  {name:"Micro-expressions", meaning:"True emotional leak", rarity:"Rare", percent:"5%", type:"NT"},
-  {name:"Sudden Pupil Dilation", meaning:"High interest/attraction", rarity:"Rare", percent:"3%", type:"NT"},
-  {name:"The 'Death Stare'", meaning:"Hostility/Intimidation", rarity:"Extremely Rare", percent:"<1%", type:"NT"},
-  {name:"Complete Stillness", meaning:"Freeze response or shock", rarity:"Extremely Rare", percent:"<1%", type:"NT"},
-  {name:"Genuine Duchenne Smile", meaning:"True joy (eyes involved)", rarity:"Common", percent:"60%", type:"NT"},
-  {name:"The Polite Smile", meaning:"Social mask (eyes static)", rarity:"Frequent", percent:"80%", type:"NT"},
-  {name:"Shoulder Shrug", meaning:"Lack of knowledge/care", rarity:"Common", percent:"55%", type:"NT"},
-  {name:"Jaw Clenching", meaning:"Suppressed anger/stress", rarity:"Uncommon", percent:"30%", type:"NT"},
-
-  // --- ND ---
-  {name:"Hand Flapping", meaning:"Regulating excitement/stress", rarity:"Common", percent:"40%", type:"ND"},
-  {name:"Peripheral Eye Contact", meaning:"Processing audio better", rarity:"Frequent", percent:"75%", type:"ND"},
-  {name:"Rocking/Swaying", meaning:"Vestibular self-soothing", rarity:"Common", percent:"50%", type:"ND"},
-  {name:"Object Fidgeting", meaning:"Maintaining concentration", rarity:"Frequent", percent:"85%", type:"ND"},
-  {name:"Echolalia", meaning:"Processing/enjoying sounds", rarity:"Common", percent:"45%", type:"ND"},
-  {name:"Flat Affect", meaning:"Internalizing emotions", rarity:"Uncommon", percent:"30%", type:"ND"},
-  {name:"Deep Pressure Seeking", meaning:"Grounding the nervous system", rarity:"Common", percent:"35%", type:"ND"},
-  {name:"Vocal Stimming", meaning:"Sensory feedback/joy", rarity:"Common", percent:"40%", type:"ND"},
-  {name:"Visual Stimming", meaning:"Enjoying patterns/light", rarity:"Common", percent:"40%", type:"ND"},
-  {name:"Intense Hyperfocus", meaning:"Extreme task absorption", rarity:"Frequent", percent:"80%", type:"ND"},
-  {name:"Info-Dumping", meaning:"Showing love via knowledge", rarity:"Common", percent:"65%", type:"ND"},
-  {name:"Tiptoe Walking", meaning:"Sensory input regulation", rarity:"Uncommon", percent:"20%", type:"ND"},
-  {name:"Avoiding Light/Sound", meaning:"Sensory overwhelm", rarity:"Common", percent:"55%", type:"ND"},
-  {name:"Facial Masking", meaning:"Performing NT behaviors", rarity:"Frequent", percent:"90%", type:"ND"},
-  {name:"Delayed Response", meaning:"High-detail data processing", rarity:"Common", percent:"50%", type:"ND"},
-  {name:"Literal Interpretation", meaning:"Focus on word definitions", rarity:"Common", percent:"60%", type:"ND"},
-  {name:"Body Tension (Rigidity)", meaning:"Sensory or social guard", rarity:"Common", percent:"40%", type:"ND"},
-  {name:"Safe Person Proximity", meaning:"Using a person as an anchor", rarity:"Uncommon", percent:"25%", type:"ND"},
-  {name:"Finger Flicking", meaning:"Fine motor sensory input", rarity:"Common", percent:"35%", type:"ND"},
-  {name:"Auditory Blocking", meaning:"Covering ears to focus", rarity:"Uncommon", percent:"20%", type:"ND"},
-  {name:"Non-Linear Storytelling", meaning:"Associative thinking", rarity:"Frequent", percent:"70%", type:"ND"},
-  {name:"Hyper-Empathy", meaning:"Feeling others' pain deeply", rarity:"Common", percent:"45%", type:"ND"},
-  {name:"Monotropism", meaning:"Single-channel attention", rarity:"Frequent", percent:"85%", type:"ND"},
-  {name:"Skin Picking/Scrubbing", meaning:"Anxious self-regulation", rarity:"Uncommon", percent:"30%", type:"ND"},
-  {name:"Sudden Shutdown", meaning:"Total sensory/social burnout", rarity:"Rare", percent:"10%", type:"ND"}
+  // (same data as before — keep unchanged)
+  // paste your full dataset here exactly as is
 ];
 
 let showNT = true;
 let showND = true;
+
+/* Rarity ranking (lower = more common) */
+const rarityOrder = {
+  "Frequent": 1,
+  "Common": 2,
+  "Uncommon": 3,
+  "Rare": 4,
+  "Extremely Rare": 5
+};
 
 function renderTable() {
   const tbody = document.getElementById("tableBody");
   const search = document.getElementById("search").value.toLowerCase();
   tbody.innerHTML = "";
 
-  data.forEach(item => {
-    if (!((item.type === "NT" && showNT) || (item.type === "ND" && showND))) return;
-    if (!item.name.toLowerCase().includes(search)) return;
+  /* FILTER + SORT */
+  const filtered = data
+    .filter(item =>
+      ((item.type === "NT" && showNT) || (item.type === "ND" && showND)) &&
+      item.name.toLowerCase().includes(search)
+    )
+    .sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity]);
 
+  filtered.forEach(item => {
     const row = document.createElement("tr");
+
     row.innerHTML = `
       <td>${item.name}</td>
       <td>${item.meaning}</td>
@@ -195,6 +44,7 @@ function renderTable() {
         <div class="tooltip">${item.percent}</div>
       </td>
     `;
+
     tbody.appendChild(row);
   });
 }
@@ -212,6 +62,3 @@ function toggleFilter(type) {
 
 renderTable();
 </script>
-
-</body>
-</html>
