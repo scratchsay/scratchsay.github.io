@@ -1,39 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Body Language Analysis</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 40px;
+  }
+
+  .back-btn {
+    position: fixed;
+    left: 10px;
+    top: 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  input {
+    padding: 10px;
+    width: 300px;
+    margin-bottom: 15px;
+  }
+
+  .filter-btn {
+    padding: 8px 15px;
+    margin: 5px;
+    border-radius: 6px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+  }
+
+  .active {
+    background: #3498db;
+    color: white;
+  }
+
+  table {
+    margin: auto;
+    border-collapse: collapse;
+    width: 85%;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+
+  .rarity {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .tooltip {
+    visibility: hidden;
+    background: black;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    position: absolute;
+    top: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .rarity:hover .tooltip {
+    visibility: visible;
+  }
+</style>
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">← Back</button>
+
+<h2>Body Language Analysis</h2>
+
+<input type="text" id="search" placeholder="Search..." onkeyup="renderTable()">
+
+<br>
+
+<button class="filter-btn active" id="ntBtn" onclick="toggleFilter('NT')" title="Neurotypical">NT</button>
+<button class="filter-btn active" id="ndBtn" onclick="toggleFilter('ND')" title="Neurodivergent">ND</button>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Meaning</th>
+<th>Rarity</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
 <script>
 function goBack() {
   window.location.href = "https://scratchsay.github.io";
 }
 
+/* GROUPED BY RARITY (NT + ND MIXED) */
 const data = [
-  // (same data as before — keep unchanged)
-  // paste your full dataset here exactly as is
+
+  // --- FREQUENT ---
+  {name:"50/70 Eye Contact", meaning:"Shows focus and trust", rarity:"Frequent", percent:"90%", type:"NT"},
+  {name:"Sing Songy Pitch", meaning:"Conveys emotion/sarcasm", rarity:"Frequent", percent:"85%", type:"NT"},
+  {name:"The Polite Smile", meaning:"Social mask", rarity:"Frequent", percent:"80%", type:"NT"},
+
+  {name:"Peripheral Eye Contact", meaning:"Processing audio better", rarity:"Frequent", percent:"75%", type:"ND"},
+  {name:"Object Fidgeting", meaning:"Maintaining concentration", rarity:"Frequent", percent:"85%", type:"ND"},
+  {name:"Intense Hyperfocus", meaning:"Extreme task absorption", rarity:"Frequent", percent:"80%", type:"ND"},
+  {name:"Facial Masking", meaning:"Performing NT behaviors", rarity:"Frequent", percent:"90%", type:"ND"},
+  {name:"Non-Linear Storytelling", meaning:"Associative thinking", rarity:"Frequent", percent:"70%", type:"ND"},
+  {name:"Monotropism", meaning:"Single-channel attention", rarity:"Frequent", percent:"85%", type:"ND"},
+
+  // --- COMMON ---
+  {name:"Unconscious Mirroring", meaning:"Builds rapport", rarity:"Common", percent:"70%", type:"NT"},
+  {name:"Small Talk", meaning:"Social ritual", rarity:"Common", percent:"65%", type:"NT"},
+  {name:"Triple Nod", meaning:"Following signal", rarity:"Common", percent:"60%", type:"NT"},
+  {name:"Open Torso Orientation", meaning:"Engagement", rarity:"Common", percent:"55%", type:"NT"},
+  {name:"Leaning In", meaning:"Interest", rarity:"Common", percent:"50%", type:"NT"},
+
+  {name:"Hand Flapping", meaning:"Regulating excitement", rarity:"Common", percent:"40%", type:"ND"},
+  {name:"Rocking/Swaying", meaning:"Self-soothing", rarity:"Common", percent:"50%", type:"ND"},
+  {name:"Echolalia", meaning:"Processing sound", rarity:"Common", percent:"45%", type:"ND"},
+  {name:"Info-Dumping", meaning:"Sharing knowledge", rarity:"Common", percent:"65%", type:"ND"},
+  {name:"Avoiding Light/Sound", meaning:"Sensory overwhelm", rarity:"Common", percent:"55%", type:"ND"},
+
+  // --- UNCOMMON ---
+  {name:"Eyebrow Flash", meaning:"Recognition", rarity:"Uncommon", percent:"40%", type:"NT"},
+  {name:"Side Eye", meaning:"Skepticism", rarity:"Uncommon", percent:"25%", type:"NT"},
+  {name:"Pursed Lip Withhold", meaning:"Disagreement", rarity:"Uncommon", percent:"15%", type:"NT"},
+
+  {name:"Flat Affect", meaning:"Internalizing emotion", rarity:"Uncommon", percent:"30%", type:"ND"},
+  {name:"Tiptoe Walking", meaning:"Sensory regulation", rarity:"Uncommon", percent:"20%", type:"ND"},
+  {name:"Safe Person Proximity", meaning:"Anchor behavior", rarity:"Uncommon", percent:"25%", type:"ND"},
+
+  // --- RARE ---
+  {name:"Micro-expressions", meaning:"True emotion leak", rarity:"Rare", percent:"5%", type:"NT"},
+  {name:"Sudden Pupil Dilation", meaning:"Interest spike", rarity:"Rare", percent:"3%", type:"NT"},
+  {name:"Sudden Shutdown", meaning:"Burnout response", rarity:"Rare", percent:"10%", type:"ND"},
+
+  // --- EXTREMELY RARE ---
+  {name:"The 'Death Stare'", meaning:"Intimidation", rarity:"Extremely Rare", percent:"<1%", type:"NT"},
+  {name:"Complete Stillness", meaning:"Freeze response", rarity:"Extremely Rare", percent:"<1%", type:"NT"}
 ];
 
 let showNT = true;
 let showND = true;
-
-/* Rarity ranking (lower = more common) */
-const rarityOrder = {
-  "Frequent": 1,
-  "Common": 2,
-  "Uncommon": 3,
-  "Rare": 4,
-  "Extremely Rare": 5
-};
 
 function renderTable() {
   const tbody = document.getElementById("tableBody");
   const search = document.getElementById("search").value.toLowerCase();
   tbody.innerHTML = "";
 
-  /* FILTER + SORT */
-  const filtered = data
-    .filter(item =>
-      ((item.type === "NT" && showNT) || (item.type === "ND" && showND)) &&
-      item.name.toLowerCase().includes(search)
-    )
-    .sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity]);
+  data.forEach(item => {
+    if (!((item.type === "NT" && showNT) || (item.type === "ND" && showND))) return;
+    if (!item.name.toLowerCase().includes(search)) return;
 
-  filtered.forEach(item => {
     const row = document.createElement("tr");
 
     row.innerHTML = `
@@ -62,3 +193,6 @@ function toggleFilter(type) {
 
 renderTable();
 </script>
+
+</body>
+</html>
