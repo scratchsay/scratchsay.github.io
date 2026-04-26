@@ -99,11 +99,17 @@
   <div onclick="redirect('/dance')">Dance</div>
 </div>
 
-<!-- Direct links -->
-<button class="button yellow" onclick="redirect('/social')">
+<!-- Social Calculator (UPDATED) -->
+<button class="button yellow" onclick="toggleDropdown('socialDropdown')">
   Social Calculator
 </button>
+<div id="socialDropdown" class="dropdown">
+  <div onclick="redirect('/faces')">Faces</div>
+  <div onclick="redirect('/body_language')">Body languages</div>
+  <div onclick="redirect('/conversation')">Conversation</div>
+</div>
 
+<!-- Other buttons -->
 <button class="button orange" onclick="redirect('/boundaries')">
   Boundaries
 </button>
