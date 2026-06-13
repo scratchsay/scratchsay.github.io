@@ -1,70 +1,205 @@
-<div class="card">
-  <h2>Quadratic X-Method Practice</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quadratic X-Method Practice</title>
 
-  <div id="problem" style="font-size:32px; text-align:center; margin:25px;"></div>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6fb;
+      margin: 0;
+      padding: 25px;
+      color: #222;
+    }
 
-  <p style="text-align:center;">
-    Find two numbers that multiply to the <span style="color:#1f6fff;font-weight:bold;">blue constant</span>
-    and add to the <span style="color:#d62828;font-weight:bold;">red x-term</span>.
-  </p>
+    .card {
+      max-width: 650px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      text-align: center;
+    }
 
-  <div style="text-align:center;">
-    <input id="factor1" type="number" placeholder="?">
-    <input id="factor2" type="number" placeholder="?">
-    <button onclick="checkAnswer()">✓</button>
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .instructions {
+      font-size: 17px;
+      line-height: 1.5;
+      color: #444;
+    }
+
+    .blue {
+      color: #1f6fff;
+      font-weight: bold;
+    }
+
+    .red {
+      color: #d62828;
+      font-weight: bold;
+    }
+
+    #problem {
+      font-size: 42px;
+      font-weight: bold;
+      margin: 35px 0;
+    }
+
+    input {
+      width: 90px;
+      padding: 12px;
+      margin: 8px;
+      font-size: 22px;
+      text-align: center;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #2f6fed;
+    }
+
+    .check-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: none;
+      background: #2f6fed;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+
+    .check-btn:hover {
+      background: #1f55bd;
+    }
+
+    .result {
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #eefbea;
+      border-left: 6px solid #39a935;
+      font-size: 18px;
+    }
+
+    .wrong {
+      background: #ffecec;
+      border-left-color: #d33;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h1>Quadratic X-Method Practice</h1>
+
+    <p class="instructions">
+      Find two numbers that multiply to the
+      <span class="blue">blue constant</span>
+      and add to the
+      <span class="red">red x-term</span>.
+    </p>
+
+    <div id="problem"></div>
+
+    <input id="factor1" type="number" placeholder="?" />
+    <input id="factor2" type="number" placeholder="?" onkeydown="handleEnter(event)" />
+
+    <button class="check-btn" onclick="checkAnswer()">✓</button>
+
+    <div id="feedback"></div>
   </div>
 
-  <div id="feedback"></div>
+  <script>
+    let currentB;
+    let currentC;
 
-  <div style="text-align:center;">
-    <button onclick="newProblem()">New Problem</button>
-  </div>
-</div>
+    function newProblem() {
+      let r1 = randomInt(-9, 9);
+      let r2 = randomInt(-9, 9);
 
-<script>
-let currentB, currentC;
+      while (r1 === 0 || r2 === 0) {
+        r1 = randomInt(-9, 9);
+        r2 = randomInt(-9, 9);
+      }
 
-function newProblem() {
-  let r1 = randomInt(-9, 9);
-  let r2 = randomInt(-9, 9);
+      currentB = r1 + r2;
+      currentC = r1 * r2;
 
-  while (r1 === 0 || r2 === 0) {
-    r1 = randomInt(-9, 9);
-    r2 = randomInt(-9, 9);
-  }
+      document.getElementById("problem").innerHTML = `
+        x² 
+        <span class="red">${formatXTerm(currentB)}</span>
+        <span class="blue">${formatConstant(currentC)}</span>
+      `;
 
-  currentB = r1 + r2;
-  currentC = r1 * r2;
+      document.getElementById("factor1").value = "";
+      document.getElementById("factor2").value = "";
+      document.getElementById("feedback").innerHTML = "";
+      document.getElementById("factor1").focus();
+    }
 
-  document.getElementById("problem").innerHTML = `
-    x² 
-    <span style="color:#d62828;">${formatTerm(currentB)}x</span>
-    <span style="color:#1f6fff;">${formatTerm(currentC)}</span>
-  `;
+    function checkAnswer() {
+      const f1 = Number(document.getElementById("factor1").value);
+      const f2 = Number(document.getElementById("factor2").value);
 
-  document.getElementById("factor1").value = "";
-  document.getElementById("factor2").value = "";
-  document.getElementById("feedback").innerHTML = "";
-}
+      const works =
+        f1 * f2 === currentC &&
+        f1 + f2 === currentB;
 
-function checkAnswer() {
-  const f1 = Number(document.getElementById("factor1").value);
-  const f2 = Number(document.getElementById("factor2").value);
+      if (works) {
+        document.getElementById("feedback").innerHTML = `
+          <div class="result">
+            ✅ Correct!
+          </div>
+        `;
 
-  const works = f1 * f2 === currentC && f1 + f2 === currentB;
+        setTimeout(() => {
+          newProblem();
+        }, 800);
 
-  document.getElementById("feedback").innerHTML = works
-    ? `<div class="result">✅ Correct! ${f1} × ${f2} = ${currentC}, and ${f1} + ${f2} = ${currentB}</div>`
-    : `<div class="result wrong">❌ Try again. They multiply to ${f1 * f2} and add to ${f1 + f2}.</div>`;
-}
+      } else {
+        document.getElementById("feedback").innerHTML = `
+          <div class="result wrong">
+            ❌ Not quite. Try again.
+          </div>
+        `;
 
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+        document.getElementById("factor1").focus();
+      }
+    }
 
-function formatTerm(n) {
-  return n >= 0 ? `+ ${n}` : `- ${Math.abs(n)}`;
-}
+    function handleEnter(event) {
+      if (event.key === "Enter") {
+        checkAnswer();
+      }
+    }
 
-newProblem();
-</script>
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function formatXTerm(n) {
+      if (n === 1) return "+ x";
+      if (n === -1) return "- x";
+      return n >= 0 ? `+ ${n}x` : `- ${Math.abs(n)}x`;
+    }
+
+    function formatConstant(n) {
+      return n >= 0 ? `+ ${n}` : `- ${Math.abs(n)}`;
+    }
+
+    newProblem();
+  </script>
+
+</body>
+</html>
