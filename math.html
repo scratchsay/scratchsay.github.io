@@ -1,0 +1,70 @@
+<div class="card">
+  <h2>Quadratic X-Method Practice</h2>
+
+  <div id="problem" style="font-size:32px; text-align:center; margin:25px;"></div>
+
+  <p style="text-align:center;">
+    Find two numbers that multiply to the <span style="color:#1f6fff;font-weight:bold;">blue constant</span>
+    and add to the <span style="color:#d62828;font-weight:bold;">red x-term</span>.
+  </p>
+
+  <div style="text-align:center;">
+    <input id="factor1" type="number" placeholder="?">
+    <input id="factor2" type="number" placeholder="?">
+    <button onclick="checkAnswer()">✓</button>
+  </div>
+
+  <div id="feedback"></div>
+
+  <div style="text-align:center;">
+    <button onclick="newProblem()">New Problem</button>
+  </div>
+</div>
+
+<script>
+let currentB, currentC;
+
+function newProblem() {
+  let r1 = randomInt(-9, 9);
+  let r2 = randomInt(-9, 9);
+
+  while (r1 === 0 || r2 === 0) {
+    r1 = randomInt(-9, 9);
+    r2 = randomInt(-9, 9);
+  }
+
+  currentB = r1 + r2;
+  currentC = r1 * r2;
+
+  document.getElementById("problem").innerHTML = `
+    x² 
+    <span style="color:#d62828;">${formatTerm(currentB)}x</span>
+    <span style="color:#1f6fff;">${formatTerm(currentC)}</span>
+  `;
+
+  document.getElementById("factor1").value = "";
+  document.getElementById("factor2").value = "";
+  document.getElementById("feedback").innerHTML = "";
+}
+
+function checkAnswer() {
+  const f1 = Number(document.getElementById("factor1").value);
+  const f2 = Number(document.getElementById("factor2").value);
+
+  const works = f1 * f2 === currentC && f1 + f2 === currentB;
+
+  document.getElementById("feedback").innerHTML = works
+    ? `<div class="result">✅ Correct! ${f1} × ${f2} = ${currentC}, and ${f1} + ${f2} = ${currentB}</div>`
+    : `<div class="result wrong">❌ Try again. They multiply to ${f1 * f2} and add to ${f1 + f2}.</div>`;
+}
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function formatTerm(n) {
+  return n >= 0 ? `+ ${n}` : `- ${Math.abs(n)}`;
+}
+
+newProblem();
+</script>
