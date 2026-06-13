@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quadratic X-Method Practice</title>
+  <title>Quadratic Practice</title>
 
   <style>
     body {
@@ -12,10 +12,11 @@
       margin: 0;
       padding: 25px;
       color: #222;
+      line-height: 1.6;
     }
 
     .card {
-      max-width: 650px;
+      max-width: 760px;
       margin: 40px auto;
       background: white;
       padding: 30px;
@@ -24,14 +25,49 @@
       text-align: center;
     }
 
-    h1 {
-      margin-bottom: 10px;
+    .hidden {
+      display: none;
     }
 
-    .instructions {
-      font-size: 17px;
-      line-height: 1.5;
-      color: #444;
+    button {
+      padding: 10px 16px;
+      margin: 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      background: #2f6fed;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #1f55bd;
+    }
+
+    .secondary {
+      background: #666;
+    }
+
+    input {
+      width: 90px;
+      padding: 12px;
+      margin: 8px;
+      font-size: 20px;
+      text-align: center;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #2f6fed;
+    }
+
+    #xProblem {
+      font-size: 42px;
+      font-weight: bold;
+      margin: 35px 0;
     }
 
     .blue {
@@ -44,44 +80,6 @@
       font-weight: bold;
     }
 
-    #problem {
-      font-size: 42px;
-      font-weight: bold;
-      margin: 35px 0;
-    }
-
-    input {
-      width: 90px;
-      padding: 12px;
-      margin: 8px;
-      font-size: 22px;
-      text-align: center;
-      border: 2px solid #ccc;
-      border-radius: 10px;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #2f6fed;
-    }
-
-    .check-btn {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: none;
-      background: #2f6fed;
-      color: white;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-      vertical-align: middle;
-    }
-
-    .check-btn:hover {
-      background: #1f55bd;
-    }
-
     .result {
       margin-top: 25px;
       padding: 15px;
@@ -91,40 +89,143 @@
       font-size: 18px;
     }
 
-    .wrong {
+    .wrongBox {
       background: #ffecec;
       border-left-color: #d33;
+    }
+
+    .correct {
+      color: green;
+      font-weight: bold;
+    }
+
+    .wrong {
+      color: red;
+      font-weight: bold;
+    }
+
+    .solution {
+      text-align: left;
+      margin-top: 25px;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="card">
+  <div id="menu" class="card">
+    <h1>Quadratic Practice</h1>
+    <p>Choose a method to practice solving quadratics.</p>
+
+    <button onclick="loadXMethod()">X-Method</button>
+    <button onclick="loadMidpointMethod()">Midpoint Method</button>
+  </div>
+
+  <div id="xMethod" class="card hidden">
     <h1>Quadratic X-Method Practice</h1>
 
-    <p class="instructions">
+    <p>
       Find two numbers that multiply to the
       <span class="blue">blue constant</span>
       and add to the
       <span class="red">red x-term</span>.
     </p>
 
-    <div id="problem"></div>
+    <div id="xProblem"></div>
 
     <input id="factor1" type="number" placeholder="?" />
-    <input id="factor2" type="number" placeholder="?" onkeydown="handleEnter(event)" />
+    <input id="factor2" type="number" placeholder="?" onkeydown="handleXEnter(event)" />
 
-    <button class="check-btn" onclick="checkAnswer()">✓</button>
+    <button onclick="checkXAnswer()">✓</button>
+    <button onclick="newXProblem()">New Problem</button>
+    <button class="secondary" onclick="showMenu()">Use Another Method</button>
 
-    <div id="feedback"></div>
+    <div id="xFeedback"></div>
+  </div>
+
+  <div id="midpointMethod" class="card hidden">
+    <h1>Quadratic Practice: Midpoint Method</h1>
+
+    <p>
+      For an equation in the form <strong>x² + Bx + C = 0</strong>,
+      the midpoint is <strong>m = -B / 2</strong>.
+    </p>
+
+    <p>
+      The roots are <strong>m - u</strong> and <strong>m + u</strong>,
+      and <strong>m² - u² = C</strong>.
+    </p>
+
+    <button onclick="newMidpointProblem()">Generate New Problem</button>
+    <button class="secondary" onclick="showMenu()">Use Another Method</button>
+
+    <h2 id="midpointProblem">Click the button to generate a problem.</h2>
+
+    <div id="midpointQuestions" class="hidden">
+      <p><strong>Step 1:</strong> Find the midpoint m.</p>
+      m = <input id="mInput" type="number">
+
+      <p><strong>Step 2:</strong> Find u using m² - u² = C.</p>
+      u = <input id="uInput" type="number">
+
+      <p><strong>Step 3:</strong> Find the two roots.</p>
+      Root 1 = <input id="r1Input" type="number">
+      Root 2 = <input id="r2Input" type="number">
+
+      <br>
+      <button onclick="checkMidpointAnswers()">Check Answers</button>
+      <button onclick="showMidpointSolution()">Show Solution</button>
+
+      <p id="midpointFeedback"></p>
+    </div>
+
+    <div id="midpointSolution" class="solution hidden"></div>
   </div>
 
   <script>
-    let currentB;
-    let currentC;
+    let currentB, currentC;
+    let B, C, m, u, root1, root2;
 
-    function newProblem() {
+    function showMenu() {
+      document.getElementById("menu").classList.remove("hidden");
+      document.getElementById("xMethod").classList.add("hidden");
+      document.getElementById("midpointMethod").classList.add("hidden");
+    }
+
+    function loadXMethod() {
+      document.getElementById("menu").classList.add("hidden");
+      document.getElementById("xMethod").classList.remove("hidden");
+      document.getElementById("midpointMethod").classList.add("hidden");
+      newXProblem();
+    }
+
+    function loadMidpointMethod() {
+      document.getElementById("menu").classList.add("hidden");
+      document.getElementById("xMethod").classList.add("hidden");
+      document.getElementById("midpointMethod").classList.remove("hidden");
+      newMidpointProblem();
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function formatXTerm(n) {
+      if (n === 0) return "";
+      if (n === 1) return "+ x";
+      if (n === -1) return "- x";
+      return n >= 0 ? `+ ${n}x` : `- ${Math.abs(n)}x`;
+    }
+
+    function formatConstant(n) {
+      if (n === 0) return "";
+      return n >= 0 ? `+ ${n}` : `- ${Math.abs(n)}`;
+    }
+
+    function newXProblem() {
       let r1 = randomInt(-9, 9);
       let r2 = randomInt(-9, 9);
 
@@ -136,69 +237,115 @@
       currentB = r1 + r2;
       currentC = r1 * r2;
 
-      document.getElementById("problem").innerHTML = `
-        x² 
+      document.getElementById("xProblem").innerHTML = `
+        x²
         <span class="red">${formatXTerm(currentB)}</span>
         <span class="blue">${formatConstant(currentC)}</span>
       `;
 
       document.getElementById("factor1").value = "";
       document.getElementById("factor2").value = "";
-      document.getElementById("feedback").innerHTML = "";
+      document.getElementById("xFeedback").innerHTML = "";
       document.getElementById("factor1").focus();
     }
 
-    function checkAnswer() {
+    function checkXAnswer() {
       const f1 = Number(document.getElementById("factor1").value);
       const f2 = Number(document.getElementById("factor2").value);
 
-      const works =
-        f1 * f2 === currentC &&
-        f1 + f2 === currentB;
-
-      if (works) {
-        document.getElementById("feedback").innerHTML = `
-          <div class="result">
-            ✅ Correct!
-          </div>
+      if (f1 * f2 === currentC && f1 + f2 === currentB) {
+        document.getElementById("xFeedback").innerHTML = `
+          <div class="result">✅ Correct!</div>
         `;
 
-        setTimeout(() => {
-          newProblem();
-        }, 800);
-
+        setTimeout(newXProblem, 800);
       } else {
-        document.getElementById("feedback").innerHTML = `
-          <div class="result wrong">
-            ❌ Not quite. Try again.
-          </div>
+        document.getElementById("xFeedback").innerHTML = `
+          <div class="result wrongBox">❌ Not quite. Try again.</div>
         `;
-
-        document.getElementById("factor1").focus();
       }
     }
 
-    function handleEnter(event) {
-      if (event.key === "Enter") {
-        checkAnswer();
+    function handleXEnter(event) {
+      if (event.key === "Enter") checkXAnswer();
+    }
+
+    function newMidpointProblem() {
+      root1 = randomInt(-7, 7);
+      root2 = randomInt(-7, 7);
+
+      while (root1 === root2 || (root1 + root2) % 2 !== 0) {
+        root1 = randomInt(-7, 7);
+        root2 = randomInt(-7, 7);
+      }
+
+      B = -(root1 + root2);
+      C = root1 * root2;
+      m = -B / 2;
+      u = Math.abs(root2 - root1) / 2;
+
+      document.getElementById("midpointProblem").innerHTML =
+        `Solve: x² ${formatXTerm(B)} ${formatConstant(C)} = 0`;
+
+      document.getElementById("midpointQuestions").classList.remove("hidden");
+      document.getElementById("midpointSolution").classList.add("hidden");
+      document.getElementById("midpointFeedback").innerHTML = "";
+
+      document.getElementById("mInput").value = "";
+      document.getElementById("uInput").value = "";
+      document.getElementById("r1Input").value = "";
+      document.getElementById("r2Input").value = "";
+    }
+
+    function checkMidpointAnswers() {
+      const mAnswer = Number(document.getElementById("mInput").value);
+      const uAnswer = Number(document.getElementById("uInput").value);
+      const r1Answer = Number(document.getElementById("r1Input").value);
+      const r2Answer = Number(document.getElementById("r2Input").value);
+
+      const smallerRoot = Math.min(root1, root2);
+      const largerRoot = Math.max(root1, root2);
+
+      const rootsCorrect =
+        (r1Answer === smallerRoot && r2Answer === largerRoot) ||
+        (r1Answer === largerRoot && r2Answer === smallerRoot);
+
+      if (mAnswer === m && uAnswer === u && rootsCorrect) {
+        document.getElementById("midpointFeedback").innerHTML =
+          `<span class="correct">Correct! Great work.</span>`;
+      } else {
+        document.getElementById("midpointFeedback").innerHTML =
+          `<span class="wrong">Not quite. Check your midpoint, u-value, and roots.</span>`;
       }
     }
 
-    function randomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    function showMidpointSolution() {
+      const smallerRoot = Math.min(root1, root2);
+      const largerRoot = Math.max(root1, root2);
 
-    function formatXTerm(n) {
-      if (n === 1) return "+ x";
-      if (n === -1) return "- x";
-      return n >= 0 ? `+ ${n}x` : `- ${Math.abs(n)}x`;
-    }
+      document.getElementById("midpointSolution").classList.remove("hidden");
 
-    function formatConstant(n) {
-      return n >= 0 ? `+ ${n}` : `- ${Math.abs(n)}`;
-    }
+      document.getElementById("midpointSolution").innerHTML = `
+        <h2>Solution</h2>
 
-    newProblem();
+        <p><strong>Equation:</strong> x² ${formatXTerm(B)} ${formatConstant(C)} = 0</p>
+
+        <p><strong>Step 1:</strong> m = -B / 2</p>
+        <p>m = -(${B}) / 2 = <strong>${m}</strong></p>
+
+        <p><strong>Step 2:</strong> Use m² - u² = C.</p>
+        <p>${m}² - u² = ${C}</p>
+        <p>${m * m} - u² = ${C}</p>
+        <p>u² = ${m * m - C}</p>
+        <p>u = <strong>${u}</strong></p>
+
+        <p><strong>Step 3:</strong> The roots are m ± u.</p>
+        <p>${m} - ${u} = <strong>${m - u}</strong></p>
+        <p>${m} + ${u} = <strong>${m + u}</strong></p>
+
+        <h3>Final Answer: x = ${smallerRoot} and x = ${largerRoot}</h3>
+      `;
+    }
   </script>
 
 </body>
