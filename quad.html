@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quadratic Midpoint Method Practice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .card {
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    input {
+      padding: 8px;
+      margin: 6px;
+      width: 80px;
+    }
+
+    button {
+      padding: 10px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .correct {
+      color: green;
+      font-weight: bold;
+    }
+
+    .wrong {
+      color: red;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Quadratic Practice: Midpoint Method</h1>
+
+  <p>
+    Any two solutions to a quadratic equation are symmetrically spaced around a midpoint.
+    For an equation in the form:
+  </p>
+
+  <h2>x² + Bx + C = 0</h2>
+
+  <p>
+    The midpoint is:
+    <strong>m = -B / 2</strong>
+  </p>
+
+  <p>
+    The roots are:
+    <strong>m - u</strong> and <strong>m + u</strong>
+  </p>
+
+  <p>
+    Since the product of the roots is C:
+  </p>
+
+  <h2>(m - u)(m + u) = C</h2>
+  <h2>m² - u² = C</h2>
+
+  <button onclick="generateProblem()">Generate New Problem</button>
+
+  <div class="card">
+    <h2 id="problem">Click the button to generate a problem.</h2>
+
+    <div id="questions" class="hidden">
+      <p><strong>Step 1:</strong> Find the midpoint m.</p>
+      m = <input id="mInput" type="number">
+
+      <p><strong>Step 2:</strong> Find u using m² - u² = C.</p>
+      u = <input id="uInput" type="number">
+
+      <p><strong>Step 3:</strong> Find the two roots m - u and m + u.</p>
+      Root 1 = <input id="r1Input" type="number">
+      Root 2 = <input id="r2Input" type="number">
+
+      <br>
+      <button onclick="checkAnswers()">Check Answers</button>
+      <button onclick="showSolution()">Show Solution</button>
+
+      <p id="feedback"></p>
+    </div>
+  </div>
+
+  <div id="solution" class="card hidden"></div>
+
+  <script>
+    let B, C, m, u, root1, root2;
+
+    function generateProblem() {
+      // Generate integer roots
+      root1 = Math.floor(Math.random() * 15) - 7;
+      root2 = Math.floor(Math.random() * 15) - 7;
+
+      while (root1 === root2 || (root1 + root2) % 2 !== 0) {
+        root1 = Math.floor(Math.random() * 15) - 7;
+        root2 = Math.floor(Math.random() * 15) - 7;
+      }
+
+      B = -(root1 + root2);
+      C = root1 * root2;
+
+      m = -B / 2;
+      u = Math.abs(root2 - root1) / 2;
+
+      document.getElementById("problem").innerHTML =
+        `Solve: x² ${formatTerm(B, "x")} ${formatConstant(C)} = 0`;
+
+      document.getElementById("questions").classList.remove("hidden");
+      document.getElementById("solution").classList.add("hidden");
+      document.getElementById("feedback").innerHTML = "";
+
+      clearInputs();
+    }
+
+    function formatTerm(value, variable) {
+      if (value === 0) return "";
+      if (value > 0) return `+ ${value}${variable}`;
+      return `- ${Math.abs(value)}${variable}`;
+    }
+
+    function formatConstant(value) {
+      if (value === 0) return "";
+      if (value > 0) return `+ ${value}`;
+      return `- ${Math.abs(value)}`;
+    }
+
+    function clearInputs() {
+      document.getElementById("mInput").value = "";
+      document.getElementById("uInput").value = "";
+      document.getElementById("r1Input").value = "";
+      document.getElementById("r2Input").value = "";
+    }
+
+    function checkAnswers() {
+      const mAnswer = Number(document.getElementById("mInput").value);
+      const uAnswer = Number(document.getElementById("uInput").value);
+      const r1Answer = Number(document.getElementById("r1Input").value);
+      const r2Answer = Number(document.getElementById("r2Input").value);
+
+      const smallerRoot = Math.min(root1, root2);
+      const largerRoot = Math.max(root1, root2);
+
+      const rootsCorrect =
+        (r1Answer === smallerRoot && r2Answer === largerRoot) ||
+        (r1Answer === largerRoot && r2Answer === smallerRoot);
+
+      if (mAnswer === m && uAnswer === u && rootsCorrect) {
+        document.getElementById("feedback").innerHTML =
+          `<span class="correct">Correct! Great work.</span>`;
+      } else {
+        document.getElementById("feedback").innerHTML =
+          `<span class="wrong">Not quite. Check your midpoint, u-value, and roots.</span>`;
+      }
+    }
+
+    function showSolution() {
+      const smallerRoot = Math.min(root1, root2);
+      const largerRoot = Math.max(root1, root2);
+
+      document.getElementById("solution").classList.remove("hidden");
+
+      document.getElementById("solution").innerHTML = `
+        <h2>Solution</h2>
+
+        <p><strong>Equation:</strong> x² ${formatTerm(B, "x")} ${formatConstant(C)} = 0</p>
+
+        <p><strong>Step 1:</strong> Find the midpoint.</p>
+        <p>m = -B / 2</p>
+        <p>m = -(${B}) / 2 = <strong>${m}</strong></p>
+
+        <p><strong>Step 2:</strong> Use m² - u² = C.</p>
+        <p>${m}² - u² = ${C}</p>
+        <p>${m * m} - u² = ${C}</p>
+        <p>-u² = ${C - m * m}</p>
+        <p>u² = ${m * m - C}</p>
+        <p>u = <strong>${u}</strong></p>
+
+        <p><strong>Step 3:</strong> The roots are m ± u.</p>
+        <p>${m} - ${u} = <strong>${m - u}</strong></p>
+        <p>${m} + ${u} = <strong>${m + u}</strong></p>
+
+        <h3>Final Answer: x = ${smallerRoot} and x = ${largerRoot}</h3>
+      `;
+    }
+  </script>
+
+</body>
+</html>
