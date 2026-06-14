@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Derivative Rule Practice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    h1 { color: #b22222; }
+    .problem {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    input, select, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 8px 0;
+      width: 100%;
+    }
+    button {
+      background: #b22222;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #feedback {
+      font-weight: bold;
+      margin-top: 15px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Derivative Rules Practice</h1>
+
+  <p>Choose the correct rule, then type the derivative.</p>
+
+  <div class="problem" id="problem"></div>
+
+  <label>Which rule should you use?</label>
+  <select id="rule">
+    <option value="">Choose a rule</option>
+    <option value="product">Product Rule</option>
+    <option value="quotient">Quotient Rule</option>
+    <option value="chain">Chain Rule</option>
+  </select>
+
+  <label>Your derivative:</label>
+  <input id="answer" placeholder="Example: 6xcos(3x^2)">
+
+  <button onclick="checkAnswer()">Check Answer</button>
+  <button onclick="newProblem()">New Problem</button>
+
+  <div id="feedback"></div>
+  <p id="solution"></p>
+</div>
+
+<script>
+const problems = [
+  {
+    problem: "y = x^2 sin(x)",
+    rule: "product",
+    answers: ["2xsin(x)+x^2cos(x)", "x^2cos(x)+2xsin(x)"],
+    solution: "Product Rule: y' = 2xsin(x) + x^2cos(x)"
+  },
+  {
+    problem: "y = x^3 ln(x)",
+    rule: "product",
+    answers: ["3x^2ln(x)+x^2", "x^2(3ln(x)+1)"],
+    solution: "Product Rule: y' = 3x^2ln(x) + x^2"
+  },
+  {
+    problem: "y = sin(x) / x",
+    rule: "quotient",
+    answers: ["(xcos(x)-sin(x))/x^2"],
+    solution: "Quotient Rule: y' = (xcos(x) - sin(x)) / x^2"
+  },
+  {
+    problem: "y = e^x / x^2",
+    rule: "quotient",
+    answers: ["(x^2e^x-2xe^x)/x^4", "e^x(x-2)/x^3"],
+    solution: "Quotient Rule: y' = (x^2e^x - 2xe^x) / x^4"
+  },
+  {
+    problem: "y = cos(3x^2)",
+    rule: "chain",
+    answers: ["-6xsin(3x^2)"],
+    solution: "Chain Rule: y' = -sin(3x^2)(6x) = -6xsin(3x^2)"
+  },
+  {
+    problem: "y = (2x^3 + 4)^5",
+    rule: "chain",
+    answers: ["30x^2(2x^3+4)^4"],
+    solution: "Chain Rule: y' = 5(2x^3 + 4)^4(6x^2) = 30x^2(2x^3+4)^4"
+  }
+];
+
+let current;
+
+function clean(text) {
+  return text
+    .toLowerCase()
+    .replace(/\s/g, "")
+    .replace(/\*/g, "")
+    .replace(/y'=/g, "")
+    .replace(/dy\/dx=/g, "");
+}
+
+function newProblem() {
+  current = problems[Math.floor(Math.random() * problems.length)];
+  document.getElementById("problem").textContent = current.problem;
+  document.getElementById("rule").value = "";
+  document.getElementById("answer").value = "";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("solution").textContent = "";
+}
+
+function checkAnswer() {
+  const chosenRule = document.getElementById("rule").value;
+  const userAnswer = clean(document.getElementById("answer").value);
+
+  const ruleCorrect = chosenRule === current.rule;
+  const answerCorrect = current.answers.some(ans => clean(ans) === userAnswer);
+
+  if (ruleCorrect && answerCorrect) {
+    document.getElementById("feedback").textContent = "Correct!";
+    document.getElementById("feedback").style.color = "green";
+  } else {
+    document.getElementById("feedback").textContent = "Not quite. Try again or check the solution.";
+    document.getElementById("feedback").style.color = "red";
+  }
+
+  document.getElementById("solution").textContent = current.solution;
+}
+
+newProblem();
+</script>
+
+</body>
+</html>
