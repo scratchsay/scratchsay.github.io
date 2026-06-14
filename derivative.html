@@ -1,183 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Derivative Practice Generator</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+    padding:30px;
+}
+
+.container{
+    max-width:800px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.2);
+}
+
+h1{
+    text-align:center;
+}
+
+.problem{
+    font-size:28px;
+    margin:25px 0;
+    text-align:center;
+}
+
+input,select,button{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    font-size:16px;
+}
+
+button{
+    cursor:pointer;
+}
+
+#feedback{
+    font-weight:bold;
+    margin-top:15px;
+}
+
+#solution{
+    margin-top:15px;
+    color:#444;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Derivative Practice</h1>
+
+<label>Difficulty</label>
+<select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+</select>
+
+<div id="problem" class="problem"></div>
+
+<input id="answer" placeholder="Enter derivative">
+
+<button onclick="checkAnswer()">Check Answer</button>
+<button onclick="showSolution()">Show Solution</button>
+<button onclick="newProblem()">New Problem</button>
+
+<div id="feedback"></div>
+<div id="solution"></div>
+
+</div>
+
 <script>
+
 let current;
 
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function rand(min,max){
+    return Math.floor(Math.random()*(max-min+1))+min;
 }
 
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+function clean(str){
+    return str.toLowerCase()
+              .replace(/\s/g,"")
+              .replace(/\*/g,"");
 }
 
-function clean(text) {
-  return text
-    .toLowerCase()
-    .replace(/\s/g, "")
-    .replace(/\*/g, "")
-    .replace(/y'=/g, "")
-    .replace(/dy\/dx=/g, "");
+function term(a,n){
+
+    if(n===1){
+        return a===1 ? "x" : a+"x";
+    }
+
+    return (a===1 ? "" : a) + "x^" + n;
 }
 
-function term(a, n) {
-  if (n === 0) return `${a}`;
-  if (n === 1) return `${a}x`;
-  return `${a}x^${n}`;
+function dTerm(a,n){
+
+    if(n===1){
+        return String(a);
+    }
+
+    const coef=a*n;
+    const power=n-1;
+
+    if(power===1){
+        return coef+"x";
+    }
+
+    return coef+"x^"+power;
 }
 
-function derivativeTerm(a, n) {
-  if (n === 0) return "0";
-  if (n === 1) return `${a}`;
-  return `${a * n}x^${n - 1}`;
-}
+function generateEasy(){
 
-function generateEasy() {
-  const types = ["power", "sin", "cos", "ln", "ex"];
-  const type = pick(types);
+    const type=rand(1,5);
 
-  if (type === "power") {
-    const a = rand(1, 9);
-    const n = rand(2, 6);
-    return {
-      problem: `y = ${term(a, n)}`,
-      answer: derivativeTerm(a, n),
-      solution: `Power rule: ${term(a, n)} → ${derivativeTerm(a, n)}`
+    if(type===1){
+
+        const a=rand(1,9);
+        const n=rand(2,8);
+
+        return{
+            problem:`y = ${term(a,n)}`,
+            answer:dTerm(a,n),
+            solution:`Power rule: ${term(a,n)} → ${dTerm(a,n)}`
+        };
+    }
+
+    if(type===2){
+        return{
+            problem:"y = sin(x)",
+            answer:"cos(x)",
+            solution:"d/dx[sin(x)] = cos(x)"
+        };
+    }
+
+    if(type===3){
+        return{
+            problem:"y = cos(x)",
+            answer:"-sin(x)",
+            solution:"d/dx[cos(x)] = -sin(x)"
+        };
+    }
+
+    if(type===4){
+        return{
+            problem:"y = ln(x)",
+            answer:"1/x",
+            solution:"d/dx[ln(x)] = 1/x"
+        };
+    }
+
+    return{
+        problem:"y = e^x",
+        answer:"e^x",
+        solution:"d/dx[e^x] = e^x"
     };
-  }
-
-  if (type === "sin") {
-    return {
-      problem: "y = sin(x)",
-      answer: "cos(x)",
-      solution: "The derivative of sin(x) is cos(x)."
-    };
-  }
-
-  if (type === "cos") {
-    return {
-      problem: "y = cos(x)",
-      answer: "-sin(x)",
-      solution: "The derivative of cos(x) is -sin(x)."
-    };
-  }
-
-  if (type === "ln") {
-    return {
-      problem: "y = ln(x)",
-      answer: "1/x",
-      solution: "The derivative of ln(x) is 1/x."
-    };
-  }
-
-  return {
-    problem: "y = e^x",
-    answer: "e^x",
-    solution: "The derivative of e^x is e^x."
-  };
 }
 
-function generateMedium() {
-  let parts = [];
-  let derivs = [];
+function generateMedium(){
 
-  const count = rand(2, 4);
+    const terms=rand(2,5);
 
-  for (let i = 0; i < count; i++) {
-    const a = rand(1, 9);
-    const n = rand(1, 6);
-    const sign = i === 0 ? "" : pick([" + ", " - "]);
+    let problem="";
+    let derivative="";
 
-    parts.push(sign + term(a, n));
+    for(let i=0;i<terms;i++){
 
-    let d = derivativeTerm(a, n);
-    if (sign === " - ") d = "-" + d;
-    derivs.push(d);
-  }
+        const a=rand(1,9);
+        const n=rand(1,6);
 
-  const problem = "y = " + parts.join("");
-  const answer = derivs.join("+").replace(/\+\-/g, "-");
+        const sign=(i===0)
+            ? ""
+            : (Math.random()<0.5 ? "+" : "-");
 
-  return {
-    problem,
-    answer,
-    solution: `Differentiate each term separately: y' = ${answer}`
-  };
-}
+        problem += sign + term(a,n);
 
-function generateHard() {
-  const types = ["product", "chainSin", "chainCos", "trigPoly"];
-  const type = pick(types);
+        let d=dTerm(a,n);
 
-  if (type === "product") {
-    const a = rand(1, 5);
-    const n = rand(2, 5);
-    return {
-      problem: `y = ${term(a, n)}sin(x)`,
-      answer: `${a * n}x^${n - 1}sin(x)+${term(a, n)}cos(x)`,
-      solution: `Product rule: first derivative times second plus first times second derivative.`
+        derivative += sign + d;
+    }
+
+    return{
+        problem:"y = "+problem,
+        answer:derivative,
+        solution:"Differentiate each term separately.\nAnswer: "+derivative
     };
-  }
+}
 
-  if (type === "chainSin") {
-    const a = rand(2, 6);
-    const n = rand(2, 4);
-    return {
-      problem: `y = sin(${a}x^${n})`,
-      answer: `${a * n}x^${n - 1}cos(${a}x^${n})`,
-      solution: `Chain rule: derivative of sin(u) is cos(u) · u'. Here u = ${a}x^${n}.`
+function generateHard(){
+
+    const type=rand(1,3);
+
+    if(type===1){
+
+        const a=rand(2,6);
+        const n=rand(2,5);
+
+        return{
+            problem:`y = sin(${a}x^${n})`,
+            answer:`${a*n}x^${n-1}cos(${a}x^${n})`,
+            solution:`Chain rule:\nDerivative = cos(${a}x^${n}) × (${a*n}x^${n-1})`
+        };
+    }
+
+    if(type===2){
+
+        const a=rand(2,6);
+        const n=rand(2,5);
+
+        return{
+            problem:`y = cos(${a}x^${n})`,
+            answer:`-${a*n}x^${n-1}sin(${a}x^${n})`,
+            solution:`Chain rule:\nDerivative = -sin(${a}x^${n}) × (${a*n}x^${n-1})`
+        };
+    }
+
+    const a=rand(1,5);
+    const n=rand(2,4);
+
+    return{
+        problem:`y = ${term(a,n)}sin(x)`,
+        answer:`${a*n}x^${n-1}sin(x)+${term(a,n)}cos(x)`,
+        solution:`Product rule:\n(fg)' = f'g + fg'`
     };
-  }
-
-  if (type === "chainCos") {
-    const a = rand(2, 6);
-    const n = rand(2, 4);
-    return {
-      problem: `y = cos(${a}x^${n})`,
-      answer: `-${a * n}x^${n - 1}sin(${a}x^${n})`,
-      solution: `Chain rule: derivative of cos(u) is -sin(u) · u'. Here u = ${a}x^${n}.`
-    };
-  }
-
-  const a = rand(2, 7);
-  const n = rand(2, 5);
-
-  return {
-    problem: `y = ${term(a, n)} + sin(x)`,
-    answer: `${a * n}x^${n - 1}+cos(x)`,
-    solution: `Differentiate both parts: ${term(a, n)} → ${a * n}x^${n - 1}, and sin(x) → cos(x).`
-  };
 }
 
-function newProblem() {
-  const difficulty = document.getElementById("difficulty").value;
+function newProblem(){
 
-  if (difficulty === "easy") current = generateEasy();
-  if (difficulty === "medium") current = generateMedium();
-  if (difficulty === "hard") current = generateHard();
+    const difficulty=
+        document.getElementById("difficulty").value;
 
-  document.getElementById("problem").textContent = current.problem;
-  document.getElementById("answer").value = "";
-  document.getElementById("feedback").textContent = "";
-  document.getElementById("solution").textContent = "";
+    if(difficulty==="easy"){
+        current=generateEasy();
+    }
+
+    if(difficulty==="medium"){
+        current=generateMedium();
+    }
+
+    if(difficulty==="hard"){
+        current=generateHard();
+    }
+
+    document.getElementById("problem").textContent=
+        current.problem;
+
+    document.getElementById("answer").value="";
+    document.getElementById("feedback").textContent="";
+    document.getElementById("solution").textContent="";
 }
 
-function checkAnswer() {
-  const userAnswer = clean(document.getElementById("answer").value);
-  const correctAnswer = clean(current.answer);
+function checkAnswer(){
 
-  if (userAnswer === correctAnswer) {
-    document.getElementById("feedback").textContent = "Correct!";
-    document.getElementById("feedback").style.color = "green";
-    setTimeout(newProblem, 1000);
-  } else {
-    document.getElementById("feedback").textContent = "Not quite. Try again or click Show Solution.";
-    document.getElementById("feedback").style.color = "red";
-  }
+    const user=
+        clean(document.getElementById("answer").value);
+
+    const correct=
+        clean(current.answer);
+
+    if(user===correct){
+
+        document.getElementById("feedback").textContent=
+            "✅ Correct!";
+
+        document.getElementById("feedback").style.color=
+            "green";
+
+        setTimeout(newProblem,1000);
+
+    }else{
+
+        document.getElementById("feedback").textContent=
+            "❌ Incorrect. Try again or click Show Solution.";
+
+        document.getElementById("feedback").style.color=
+            "red";
+    }
 }
 
-function showSolution() {
-  document.getElementById("solution").textContent =
-    current.solution + " Answer: y' = " + current.answer;
+function showSolution(){
+
+    document.getElementById("solution").innerText=
+        current.solution + "\n\nAnswer: " + current.answer;
 }
 
 newProblem();
+
 </script>
+
+</body>
+</html>
