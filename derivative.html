@@ -150,18 +150,31 @@ function generateEasy(){
         };
     }
 
-    if(type===4){
-        return{
-            problem:"y = ln(x)",
-            answer:"1/x",
-            solution:"d/dx[ln(x)] = 1/x"
-        };
-    }
+if(type===4){
+
+    const a = rand(2,9);
 
     return{
-        problem:"y = e^x",
-        answer:"e^x",
-        solution:"d/dx[e^x] = e^x"
+        problem:`y = ln(${a}x)`,
+        answer:`1/x`,
+        solution:`Chain rule:
+d/dx[ln(${a}x)]
+= (1/(${a}x))(${a})
+= 1/x`
+    };
+}
+
+if(type===5){
+
+    const a = rand(2,9);
+
+    return{
+        problem:`y = e^(${a}x)`,
+        answer:`${a}e^(${a}x)`,
+        solution:`Chain rule:
+d/dx[e^(${a}x)]
+= e^(${a}x)(${a})
+= ${a}e^(${a}x)`
     };
 }
 
