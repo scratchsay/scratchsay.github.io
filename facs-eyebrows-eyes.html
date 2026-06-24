@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>FACS Eyebrows + Eyes Trainer</title>
+<style>
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  text-align:center;
+  padding:20px;
+}
+
+.face{
+  width:300px;height:340px;
+  background:#ffd7b5;
+  border-radius:45%;
+  margin:20px auto;
+  position:relative;
+  transition:.15s;
+}
+
+.eye{
+  width:60px;height:30px;
+  background:#fff;
+  border:3px solid #222;
+  border-radius:50%;
+  position:absolute;
+  top:120px;
+  overflow:hidden;
+  transition:.15s;
+}
+
+.left-eye{left:70px}
+.right-eye{right:70px}
+
+.pupil{
+  width:16px;height:16px;
+  background:#111;
+  border-radius:50%;
+  position:absolute;
+  top:6px;left:22px;
+  transition:.15s;
+}
+
+.brow{
+  width:65px;height:10px;
+  background:#3b1f10;
+  border-radius:8px;
+  position:absolute;
+  top:85px;
+  transition:.15s;
+}
+
+.left-brow{left:65px}
+.right-brow{right:65px}
+
+input,button{
+  padding:12px;
+  font-size:18px;
+  margin:6px;
+}
+
+#result{font-weight:bold;font-size:18px}
+</style>
+</head>
+
+<body>
+
+<h2>FACS Eyebrows + Eyes Trainer</h2>
+<p>Type AU numbers (e.g. 1, 62)</p>
+
+<div class="face" id="face">
+  <div class="brow left-brow" id="lb"></div>
+  <div class="brow right-brow" id="rb"></div>
+
+  <div class="eye left-eye" id="le">
+    <div class="pupil" id="lp"></div>
+  </div>
+
+  <div class="eye right-eye" id="re">
+    <div class="pupil" id="rp"></div>
+  </div>
+</div>
+
+<input id="answer" placeholder="e.g. 1, 63" />
+<br>
+<button onclick="check()">Check</button>
+<button onclick="next()">Next</button>
+
+<p id="result"></p>
+<p>Score: <span id="score">0</span> | Round: <span id="round">0</span></p>
+
+<script>
+const allAUs = [1,2,4,61,62,63,64];
+
+let current = [];
+let score = 0;
+let round = 0;
+
+const $ = id => document.getElementById(id);
+
+function reset(){
+  lb.style.transform = rb.style.transform = "none";
+
+  le.style.height = re.style.height = "30px";
+  le.style.transform = re.style.transform = "none";
+
+  lp.style.transform = rp.style.transform = "none";
+}
+
+function apply(au){
+  switch(au){
+
+    // EYEBROWS
+    case 1:
+      lb.style.transform = "translateY(-20px) rotate(-12deg)";
+      break;
+
+    case 2:
+      rb.style.transform = "translateY(-20px) rotate(12deg)";
+      break;
+
+    case 4:
+      lb.style.transform = "translateY(14px) rotate(18deg)";
+      rb.style.transform = "translateY(14px) rotate(-18deg)";
+      break;
+
+    // EYES
+    case 61:
+      lp.style.transform = rp.style.transform = "translateX(-18px)";
+      break;
+
+    case 62:
+      lp.style.transform = rp.style.transform = "translateX(18px)";
+      break;
+
+    case 63:
+      lp.style.transform = rp.style.transform = "translateY(-10px)";
+      break;
+
+    case 64:
+      lp.style.transform = rp.style.transform = "translateY(10px)";
+      break;
+  }
+}
+
+function next(){
+  reset();
+  $("answer").value = "";
+  $("result").textContent = "";
+
+  current = [];
+  let count = Math.floor(Math.random()*2)+1;
+
+  while(current.length < count){
+    let au = allAUs[Math.floor(Math.random()*allAUs.length)];
+    if(!current.includes(au)) current.push(au);
+  }
+
+  current.forEach(apply);
+
+  round++;
+  $("round").textContent = round;
+}
+
+function check(){
+  let guess = $("answer").value
+    .split(/[,\s]+/)
+    .map(x=>Number(x))
+    .filter(x=>!isNaN(x))
+    .sort((a,b)=>a-b);
+
+  let correct = [...current].sort((a,b)=>a-b);
+
+  if(JSON.stringify(guess) === JSON.stringify(correct)){
+    score++;
+    $("result").textContent = "Correct";
+    $("result").style.color = "green";
+  } else {
+    $("result").textContent = "Wrong: " + correct.join(", ");
+    $("result").style.color = "red";
+  }
+
+  $("score").textContent = score;
+}
+
+next();
+</script>
+
+</body>
+</html>
