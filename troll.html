@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FACS Animated Face Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    svg {
+      width: 320px;
+      height: 320px;
+      background: white;
+      border-radius: 20px;
+      margin: 20px auto;
+      display: block;
+    }
+
+    input {
+      font-size: 28px;
+      padding: 10px;
+      width: 160px;
+      text-align: center;
+    }
+
+    #prompt, #timer, #stats {
+      font-size: 22px;
+      margin: 10px;
+    }
+
+    .brow, .eye, .pupil {
+      transition: all 0.35s ease;
+    }
+  </style>
+</head>
+<body>
+
+<h1>FACS Animated Face Game</h1>
+<div id="timer">Time: 120</div>
+
+<svg viewBox="0 0 300 300">
+  <!-- face -->
+  <circle cx="150" cy="150" r="115" fill="#ffd6a5" stroke="#333" stroke-width="4"/>
+
+  <!-- eyebrows -->
+  <line id="leftBrow" class="brow" x1="80" y1="95" x2="125" y2="90" stroke="#333" stroke-width="8" stroke-linecap="round"/>
+  <line id="rightBrow" class="brow" x1="175" y1="90" x2="220" y2="95" stroke="#333" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- eyes -->
+  <ellipse class="eye" cx="105" cy="130" rx="28" ry="18" fill="white" stroke="#333" stroke-width="3"/>
+  <ellipse class="eye" cx="195" cy="130" rx="28" ry="18" fill="white" stroke="#333" stroke-width="3"/>
+
+  <!-- pupils -->
+  <circle id="leftPupil" class="pupil" cx="105" cy="130" r="8" fill="#333"/>
+  <circle id="rightPupil" class="pupil" cx="195" cy="130" r="8" fill="#333"/>
+
+  <!-- nose -->
+  <path d="M150 135 Q140 170 155 170" fill="none" stroke="#333" stroke-width="3"/>
+
+  <!-- mouth -->
+  <path d="M110 210 Q150 235 190 210" fill="none" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+</svg>
+
+<h2 id="prompt"></h2>
+<input id="answer" autofocus autocomplete="off" />
+
+<div id="stats">
+  Faces: <span id="faces">0</span><br>
+  Accuracy: <span id="accuracy">100</span>%<br>
+  Score: <span id="score">0</span>
+</div>
+
+<script>
+const actions = [
+  { code: "1", name: "Inner Brow Raiser" },
+  { code: "2", name: "Outer Brow Raiser" },
+  { code: "4", name: "Brow Lowerer" },
+  { code: "61", name: "Eyes Turn Left" },
+  { code: "62", name: "Eyes Turn Right" },
+  { code: "63", name: "Eyes Up" },
+  { code: "64", name: "Eyes Down" }
+];
+
+let current;
+let time = 120;
+let faces = 0;
+let correct = 0;
+let attempts = 0;
+let gameOver = false;
+
+const answer = document.getElementById("answer");
+const promptText = document.getElementById("prompt");
+
+const leftBrow = document.getElementById("leftBrow");
+const rightBrow = document.getElementById("rightBrow");
+const leftPupil = document.getElementById("leftPupil");
+const rightPupil = document.getElementById("rightPupil");
+
+function resetFace() {
+  leftBrow.setAttribute("x1", 80);
+  leftBrow.setAttribute("y1", 95);
+  leftBrow.setAttribute("x2", 125);
+  leftBrow.setAttribute("y2", 90);
+
+  rightBrow.setAttribute("x1", 175);
+  rightBrow.setAttribute("y1", 90);
+  rightBrow.setAttribute("x2", 220);
+  rightBrow.setAttribute("y2", 95);
+
+  leftPupil.setAttribute("cx", 105);
+  leftPupil.setAttribute("cy", 130);
+  rightPupil.setAttribute("cx", 195);
+  rightPupil.setAttribute("cy", 130);
+}
+
+function animateFace(code) {
+  resetFace();
+
+  if (code === "1") {
+    leftBrow.setAttribute("y2", 65);
+    rightBrow.setAttribute("y1", 65);
+  }
+
+  if (code === "2") {
+    leftBrow.setAttribute("y1", 65);
+    rightBrow.setAttribute("y2", 65);
+  }
+
+  if (code === "4") {
+    leftBrow.setAttribute("y2", 115);
+    rightBrow.setAttribute("y1", 115);
+  }
+
+  if (code === "61") {
+    leftPupil.setAttribute("cx", 92);
+    rightPupil.setAttribute("cx", 182);
+  }
+
+  if (code === "62") {
+    leftPupil.setAttribute("cx", 118);
+    rightPupil.setAttribute("cx", 208);
+  }
+
+  if (code === "63") {
+    leftPupil.setAttribute("cy", 120);
+    rightPupil.setAttribute("cy", 120);
+  }
+
+  if (code === "64") {
+    leftPupil.setAttribute("cy", 140);
+    rightPupil.setAttribute("cy", 140);
+  }
+}
+
+function newFace() {
+  current = actions[Math.floor(Math.random() * actions.length)];
+  promptText.textContent = current.name;
+  animateFace(current.code);
+  answer.value = "";
+}
+
+function updateStats() {
+  const accuracy = attempts === 0 ? 100 : Math.round((correct / attempts) * 100);
+  document.getElementById("faces").textContent = faces;
+  document.getElementById("accuracy").textContent = accuracy;
+  document.getElementById("score").textContent = faces * accuracy * 10;
+}
+
+answer.addEventListener("input", () => {
+  if (gameOver) return;
+
+  if (answer.value === current.code) {
+    attempts++;
+    correct++;
+    faces++;
+    updateStats();
+    newFace();
+  } else if (answer.value.length >= current.code.length) {
+    attempts++;
+    updateStats();
+    answer.value = "";
+  }
+});
+
+setInterval(() => {
+  if (gameOver) return;
+
+  time--;
+  document.getElementById("timer").textContent = "Time: " + time;
+
+  if (time <= 0) {
+    gameOver = true;
+    answer.disabled = true;
+    promptText.textContent = "Game Over!";
+    resetFace();
+  }
+}, 1000);
+
+newFace();
+updateStats();
+</script>
+
+</body>
+</html>
