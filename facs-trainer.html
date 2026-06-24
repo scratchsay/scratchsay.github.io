@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>FACS Trainer</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .face {
+    width: 300px;
+    height: 360px;
+    background: #ffd7b5;
+    border-radius: 45%;
+    margin: 20px auto;
+    position: relative;
+    transition: 0.4s;
+  }
+
+  .eye {
+    width: 55px;
+    height: 28px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 115px;
+    overflow: hidden;
+    transition: 0.3s;
+  }
+
+  .left-eye { left: 75px; }
+  .right-eye { right: 75px; }
+
+  .pupil {
+    width: 16px;
+    height: 16px;
+    background: black;
+    border-radius: 50%;
+    position: absolute;
+    top: 6px;
+    left: 20px;
+    transition: 0.3s;
+  }
+
+  .brow {
+    width: 60px;
+    height: 8px;
+    background: #4a2a16;
+    border-radius: 8px;
+    position: absolute;
+    top: 85px;
+    transition: 0.3s;
+  }
+
+  .left-brow { left: 70px; }
+  .right-brow { right: 70px; }
+
+  .nose {
+    width: 35px;
+    height: 50px;
+    border-radius: 50%;
+    background: #efb990;
+    position: absolute;
+    top: 155px;
+    left: 132px;
+    transition: 0.3s;
+  }
+
+  .mouth {
+    width: 95px;
+    height: 35px;
+    border-bottom: 8px solid #8b2b2b;
+    border-radius: 0 0 90px 90px;
+    position: absolute;
+    top: 245px;
+    left: 102px;
+    transition: 0.3s;
+  }
+
+  .cheek {
+    width: 45px;
+    height: 25px;
+    background: rgba(255, 120, 120, 0.3);
+    border-radius: 50%;
+    position: absolute;
+    top: 180px;
+    transition: 0.3s;
+  }
+
+  .left-cheek { left: 55px; }
+  .right-cheek { right: 55px; }
+
+  input {
+    padding: 10px;
+    width: 260px;
+    font-size: 16px;
+  }
+
+  button {
+    padding: 10px 16px;
+    font-size: 16px;
+    margin: 8px;
+    cursor: pointer;
+  }
+
+  #result {
+    font-weight: bold;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>FACS Muscle Trainer</h1>
+<p>Watch the animated face. Type the activated FACS numbers separated by commas.</p>
+
+<div class="face" id="face">
+  <div class="brow left-brow" id="lb"></div>
+  <div class="brow right-brow" id="rb"></div>
+
+  <div class="eye left-eye" id="le">
+    <div class="pupil" id="lp"></div>
+  </div>
+  <div class="eye right-eye" id="re">
+    <div class="pupil" id="rp"></div>
+  </div>
+
+  <div class="cheek left-cheek" id="lc"></div>
+  <div class="cheek right-cheek" id="rc"></div>
+  <div class="nose" id="nose"></div>
+  <div class="mouth" id="mouth"></div>
+</div>
+
+<input id="answer" placeholder="Example: 1, 12, 26" />
+<br />
+<button onclick="checkAnswer()">Check</button>
+<button onclick="nextFace()">Next</button>
+
+<p id="result"></p>
+<p>Score: <span id="score">0</span></p>
+
+<script>
+const allAUs = [
+  1,2,4,5,6,7,9,10,11,12,13,14,15,16,17,18,20,22,23,24,25,26,27,28,
+  41,42,43,44,45,46,51,52,53,54,55,56,57,58,61,62,63,64
+];
+
+let current = [];
+let score = 0;
+
+function resetFace() {
+  face.style.transform = "none";
+  lb.style.transform = "none";
+  rb.style.transform = "none";
+  le.style.height = "28px";
+  re.style.height = "28px";
+  le.style.transform = "none";
+  re.style.transform = "none";
+  lp.style.transform = "none";
+  rp.style.transform = "none";
+  nose.style.transform = "none";
+  mouth.style.width = "95px";
+  mouth.style.height = "35px";
+  mouth.style.borderBottom = "8px solid #8b2b2b";
+  mouth.style.borderTop = "none";
+  mouth.style.borderRadius = "0 0 90px 90px";
+  lc.style.transform = "none";
+  rc.style.transform = "none";
+}
+
+function activateAU(au) {
+  switch (au) {
+    case 1: lb.style.transform = "translateY(-18px) rotate(-8deg)"; break;
+    case 2: rb.style.transform = "translateY(-18px) rotate(8deg)"; break;
+    case 4:
+      lb.style.transform = "translateY(14px) rotate(14deg)";
+      rb.style.transform = "translateY(14px) rotate(-14deg)";
+      break;
+    case 5: le.style.height = re.style.height = "40px"; break;
+    case 6:
+      lc.style.transform = rc.style.transform = "translateY(-15px)";
+      le.style.height = re.style.height = "20px";
+      break;
+    case 7: le.style.height = re.style.height = "16px"; break;
+    case 9: nose.style.transform = "scaleX(1.35) translateY(-8px)"; break;
+    case 10: mouth.style.transform = "translateY(-10px)"; break;
+    case 12: mouth.style.width = "130px"; mouth.style.borderRadius = "0 0 100px 100px"; break;
+    case 15: mouth.style.transform = "rotate(180deg) translateY(-10px)"; break;
+    case 16: mouth.style.height = "55px"; break;
+    case 17: mouth.style.transform = "translateY(-18px)"; break;
+    case 18: mouth.style.width = "45px"; break;
+    case 20: mouth.style.width = "155px"; mouth.style.height = "12px"; break;
+    case 22: mouth.style.width = "55px"; mouth.style.height = "55px"; break;
+    case 23:
+    case 24: mouth.style.height = "5px"; break;
+    case 25: mouth.style.borderBottom = "16px solid #8b2b2b"; break;
+    case 26: mouth.style.height = "85px"; mouth.style.borderBottom = "35px solid #8b2b2b"; break;
+    case 27: mouth.style.width = "140px"; mouth.style.height = "95px"; break;
+    case 28: mouth.style.width = "50px"; mouth.style.height = "10px"; break;
+    case 41: le.style.height = re.style.height = "14px"; break;
+    case 42: le.style.height = re.style.height = "8px"; break;
+    case 43: le.style.height = re.style.height = "2px"; break;
+    case 44: le.style.transform = re.style.transform = "scaleY(0.45)"; break;
+    case 45: blink(); break;
+    case 46: le.style.height = "2px"; break;
+    case 51: face.style.transform = "rotateY(18deg)"; break;
+    case 52: face.style.transform = "rotateY(-18deg)"; break;
+    case 53: face.style.transform = "translateY(-15px)"; break;
+    case 54: face.style.transform = "translateY(15px)"; break;
+    case 55: face.style.transform = "rotate(-10deg)"; break;
+    case 56: face.style.transform = "rotate(10deg)"; break;
+    case 57: face.style.transform = "scale(1.08)"; break;
+    case 58: face.style.transform = "scale(0.92)"; break;
+    case 61: lp.style.transform = rp.style.transform = "translateX(-16px)"; break;
+    case 62: lp.style.transform = rp.style.transform = "translateX(16px)"; break;
+    case 63: lp.style.transform = rp.style.transform = "translateY(-8px)"; break;
+    case 64: lp.style.transform = rp.style.transform = "translateY(8px)"; break;
+  }
+}
+
+function blink() {
+  le.style.height = re.style.height = "2px";
+  setTimeout(() => {
+    le.style.height = re.style.height = "28px";
+  }, 300);
+}
+
+function nextFace() {
+  resetFace();
+  document.getElementById("answer").value = "";
+  document.getElementById("result").textContent = "";
+
+  current = [];
+  let count = Math.floor(Math.random() * 3) + 1;
+
+  while (current.length < count) {
+    let au = allAUs[Math.floor(Math.random() * allAUs.length)];
+    if (!current.includes(au)) current.push(au);
+  }
+
+  current.forEach(activateAU);
+}
+
+function checkAnswer() {
+  let guess = document.getElementById("answer").value
+    .split(",")
+    .map(x => Number(x.trim()))
+    .filter(x => !isNaN(x))
+    .sort((a,b) => a-b);
+
+  let correct = [...current].sort((a,b) => a-b);
+
+  if (JSON.stringify(guess) === JSON.stringify(correct)) {
+    score++;
+    result.textContent = "Correct!";
+  } else {
+    result.textContent = "Wrong. Correct answer: " + correct.join(", ");
+  }
+
+  scoreDisplay();
+}
+
+function scoreDisplay() {
+  document.getElementById("score").textContent = score;
+}
+
+nextFace();
+</script>
+
+</body>
+</html>
