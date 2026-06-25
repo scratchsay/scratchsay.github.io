@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Among Us Suspicion Tracker</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#111; color:white; padding:20px; }
+  h1,h2 { color:#ffcc66; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap:8px; }
+  .card { background:#222; padding:10px; border-radius:10px; }
+  label { display:block; margin:4px 0; }
+  button, select, input {
+    margin:5px 0; padding:8px; border-radius:8px; border:none;
+  }
+  button { cursor:pointer; background:#ffcc66; }
+  .player { border-left:8px solid gray; }
+  .dead { opacity:.45; }
+  .clear { outline:2px solid #66ff99; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  th,td { border:1px solid #555; padding:8px; text-align:left; }
+  th { background:#333; }
+</style>
+</head>
+<body>
+
+<h1>Among Us Suspicion Tracker</h1>
+
+<h2>Players</h2>
+<div id="players" class="grid"></div>
+
+<h2>New Round</h2>
+
+<label>Who died?</label>
+<select id="deadPlayer"></select>
+
+<label>Where was the body?</label>
+<input id="bodyLocation" placeholder="Electrical, Cafeteria, unsure..." />
+<button onclick="setUnsure()">Unsure</button>
+
+<h3>Who was near the body?</h3>
+<div id="nearBody" class="grid"></div>
+
+<h3>Special clears / roles</h3>
+<div id="roles" class="grid"></div>
+
+<h3>Sabotage</h3>
+<select id="sabotage">
+  <option value="">No sabotage</option>
+  <option>Lights</option>
+  <option>Reactor</option>
+  <option>O2</option>
+  <option>Comms</option>
+  <option>Doors</option>
+</select>
+
+<h3>Who fixed sabotage?</h3>
+<div id="fixers" class="grid"></div>
+
+<button onclick="saveRound()">Save Round</button>
+<button onclick="resetGame()">Reset Game</button>
+
+<h2>Suspicion Ranking</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Player</th>
+      <th>Suspicion</th>
+      <th>Reason</th>
+    </tr>
+  </thead>
+  <tbody id="ranking"></tbody>
+</table>
+
+<h2>Round Log</h2>
+<div id="log"></div>
+
+<script>
+const colors = [
+  "gray", "coral", "black", "white", "brown",
+  "blue", "orange", "green", "pink", "maroon"
+];
+
+let players = colors.map(color => ({
+  color,
+  dead:false,
+  engineer:false,
+  tracker:false,
+  medscan:false,
+  nearBodyCount:0,
+  sabotageFixCount:0
+}));
+
+let rounds = [];
+
+function render() {
+  const playersDiv = document.getElementById("players");
+  const deadSelect = document.getElementById("deadPlayer");
+  const nearDiv = document.getElementById("nearBody");
+  const rolesDiv = document.getElementById("roles");
+  const fixersDiv = document.getElementById("fixers");
+
+  playersDiv.innerHTML = "";
+  deadSelect.innerHTML = `<option value="">Nobody / skipped</option>`;
+  nearDiv.innerHTML = "";
+  rolesDiv.innerHTML = "";
+  fixersDiv.innerHTML = "";
+
+  players.forEach(p => {
+    playersDiv.innerHTML += `
+      <div class="card player ${p.dead ? "dead" : ""} ${isCleared(p) ? "clear" : ""}" style="border-color:${p.color}">
+        <b>${p.color}</b><br>
+        Near body: ${p.nearBodyCount}<br>
+        Fixed sabotages: ${p.sabotageFixCount}<br>
+        ${p.engineer ? "Engineer<br>" : ""}
+        ${p.tracker ? "Tracker<br>" : ""}
+        ${p.medscan ? "Med scan clear<br>" : ""}
+      </div>
+    `;
+
+    if (!p.dead) {
+      deadSelect.innerHTML += `<option value="${p.color}">${p.color}</option>`;
+    }
+
+    nearDiv.innerHTML += `
+      <label><input type="checkbox" class="near" value="${p.color}" ${p.dead ? "disabled" : ""}> ${p.color}</label>
+    `;
+
+    fixersDiv.innerHTML += `
+      <label><input type="checkbox" class="fixer" value="${p.color}" ${p.dead ? "disabled" : ""}> ${p.color}</label>
+    `;
+
+    rolesDiv.innerHTML += `
+      <div class="card">
+        <b>${p.color}</b>
+        <label><input type="checkbox" onchange="toggleRole('${p.color}','engineer',this.checked)" ${p.engineer ? "checked" : ""}> Engineer</label>
+        <label><input type="checkbox" onchange="toggleRole('${p.color}','tracker',this.checked)" ${p.tracker ? "checked" : ""}> Tracker</label>
+        <label><input type="checkbox" onchange="toggleRole('${p.color}','medscan',this.checked)" ${p.medscan ? "checked" : ""}> Med scan</label>
+      </div>
+    `;
+  });
+
+  renderRanking();
+  renderLog();
+  localStorage.setItem("amongUsTracker", JSON.stringify({players, rounds}));
+}
+
+function isCleared(p) {
+  return p.engineer || p.tracker || p.medscan;
+}
+
+function toggleRole(color, role, checked) {
+  const p = players.find(x => x.color === color);
+  p[role] = checked;
+  render();
+}
+
+function setUnsure() {
+  document.getElementById("bodyLocation").value = "Unsure";
+}
+
+function saveRound() {
+  const dead = document.getElementById("deadPlayer").value;
+  const location = document.getElementById("bodyLocation").value || "Unsure";
+  const near = [...document.querySelectorAll(".near:checked")].map(x => x.value);
+  const sabotage = document.getElementById("sabotage").value;
+  const fixers = [...document.querySelectorAll(".fixer:checked")].map(x => x.value);
+
+  if (dead) {
+    players.find(p => p.color === dead).dead = true;
+  }
+
+  near.forEach(color => {
+    const p = players.find(x => x.color === color);
+    if (p && !isCleared(p)) p.nearBodyCount++;
+  });
+
+  fixers.forEach(color => {
+    const p = players.find(x => x.color === color);
+    if (p) p.sabotageFixCount++;
+  });
+
+  rounds.push({ dead, location, near, sabotage, fixers });
+
+  document.getElementById("bodyLocation").value = "";
+  document.getElementById("sabotage").value = "";
+
+  render();
+}
+
+function suspicionScore(p) {
+  if (p.dead || isCleared(p)) return -1;
+
+  let score = 0;
+  score += p.nearBodyCount * 3;
+  score -= p.sabotageFixCount * 1;
+
+  return Math.max(score, 0);
+}
+
+function renderRanking() {
+  const ranking = document.getElementById("ranking");
+  ranking.innerHTML = "";
+
+  const ranked = players
+    .filter(p => !p.dead && !isCleared(p))
+    .map(p => ({...p, score:suspicionScore(p)}))
+    .sort((a,b) => b.score - a.score);
+
+  ranked.forEach((p, i) => {
+    ranking.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${p.color}</td>
+        <td>${p.score}</td>
+        <td>
+          Near body ${p.nearBodyCount} time(s).
+          Fixed sabotage ${p.sabotageFixCount} time(s).
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function renderLog() {
+  const log = document.getElementById("log");
+  log.innerHTML = "";
+
+  rounds.forEach((r, i) => {
+    log.innerHTML += `
+      <div class="card">
+        <b>Round ${i + 1}</b><br>
+        Dead: ${r.dead || "Nobody"}<br>
+        Body location: ${r.location}<br>
+        Near body: ${r.near.length ? r.near.join(", ") : "Nobody marked"}<br>
+        Sabotage: ${r.sabotage || "None"}<br>
+        Fixed by: ${r.fixers.length ? r.fixers.join(", ") : "Nobody marked"}
+      </div>
+    `;
+  });
+}
+
+function resetGame() {
+  if (!confirm("Reset the whole tracker?")) return;
+  localStorage.removeItem("amongUsTracker");
+  players = colors.map(color => ({
+    color,
+    dead:false,
+    engineer:false,
+    tracker:false,
+    medscan:false,
+    nearBodyCount:0,
+    sabotageFixCount:0
+  }));
+  rounds = [];
+  render();
+}
+
+const saved = localStorage.getItem("amongUsTracker");
+if (saved) {
+  const data = JSON.parse(saved);
+  players = data.players;
+  rounds = data.rounds;
+}
+
+render();
+</script>
+
+</body>
+</html>
