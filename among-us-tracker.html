@@ -1,67 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Among Us Distance Suspicion Tracker</title>
+<title>Among Us Sus Tracker</title>
 <style>
 body{font-family:Arial;background:#111;color:white;padding:20px}
-.card{background:#222;padding:10px;border-radius:10px;margin:8px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.card{background:#222;padding:12px;border-radius:10px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
 button,select,input{padding:8px;border-radius:8px;border:none;margin:4px}
 button{background:#ffcc66;cursor:pointer}
+.danger{background:#ff7777}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 td,th{border:1px solid #555;padding:8px}
 th{background:#333}
 .dead{opacity:.45}
 .clear{outline:2px solid #66ff99}
+.hidden{display:none}
 </style>
 </head>
 <body>
 
-<h1>Among Us Distance Suspicion Tracker</h1>
+<h1>Among Us Sus Tracker</h1>
 
-<div class="card">
-  <label>Map:</label>
-  <select id="map" onchange="renderRooms()">
-    <option value="airship">Airship</option>
-    <option value="polus">Polus</option>
-    <option value="skeld">Skeld</option>
-  </select>
+<div id="settings">
+  <div class="card">
+    <h2>Game Settings</h2>
 
-  <label>Dead player:</label>
-  <select id="deadPlayer"></select>
+    <label>Map:</label>
+    <select id="mapSelect">
+      <option value="airship">Airship</option>
+      <option value="polus">Polus</option>
+      <option value="skeld">Skeld</option>
+    </select>
 
-  <label>Body location:</label>
-  <select id="bodyRoom"></select>
+    <h3>Colors in game</h3>
+    <div id="colorChoices" class="grid"></div>
 
-  <button onclick="saveRound()">Save Round</button>
-  <button onclick="resetGame()">Reset</button>
+    <button onclick="startGame()">Start Game</button>
+  </div>
 </div>
 
-<h2>Player Locations / Clears</h2>
-<div id="players" class="grid"></div>
+<div id="game" class="hidden">
 
-<h2>Suspicion Ranking</h2>
-<table>
-<thead>
-<tr>
-<th>Rank</th><th>Player</th><th>Score</th><th>Walk Dist</th><th>Vent Dist</th><th>Reason</th>
-</tr>
-</thead>
-<tbody id="ranking"></tbody>
-</table>
+  <div class="card">
+    <h2>Round <span id="roundNum">1</span></h2>
 
-<h2>Round Log</h2>
-<div id="log"></div>
+    <label>Who died?</label>
+    <select id="deadPlayer"></select>
+
+    <label>Body location:</label>
+    <select id="bodyRoom"></select>
+
+    <h3>Where is everyone?</h3>
+    <div id="locations" class="grid"></div>
+
+    <h3>Sabotage</h3>
+    <select id="sabotage">
+      <option value="">None</option>
+      <option>Lights</option>
+      <option>Reactor</option>
+      <option>O2</option>
+      <option>Comms</option>
+      <option>Doors</option>
+    </select>
+
+    <h3>Who fixed sabotage?</h3>
+    <div id="fixers" class="grid"></div>
+
+    <h3>Confirmed roles / clears</h3>
+    <div id="clears" class="grid"></div>
+
+    <button onclick="saveRound()">Save Round</button>
+    <button class="danger" onclick="resetGame()">Full Reset</button>
+  </div>
+
+  <h2>Sus Ranking</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Player</th>
+        <th>Sus Points</th>
+        <th>Reason</th>
+      </tr>
+    </thead>
+    <tbody id="ranking"></tbody>
+  </table>
+
+  <h2>Round Log</h2>
+  <div id="log"></div>
+</div>
 
 <script>
-const colors=["gray","coral","black","white","brown","blue","orange","green","pink","maroon"];
+const allColors=[
+"Red","Blue","Green","Pink","Orange","Yellow",
+"Black","White","Purple","Brown","Cyan","Lime",
+"Maroon","Rose","Banana","Gray","Tan","Coral"
+];
 
-let players=colors.map(c=>({
-  color:c,dead:false,engineer:false,tracker:false,medscan:false,
-  location:"",nearBodyCount:0,closeVentCount:0
-}));
-
+let gameStarted=false;
+let chosenMap="";
+let round=1;
+let players=[];
 let rounds=[];
 
 const maps={
@@ -163,221 +203,304 @@ vents:{
 function makeUndirected(graph){
   for(const a in graph){
     graph[a].forEach(b=>{
-      if(!graph[b]) graph[b]=[];
-      if(!graph[b].includes(a)) graph[b].push(a);
+      if(!graph[b])graph[b]=[];
+      if(!graph[b].includes(a))graph[b].push(a);
     });
   }
 }
-Object.values(maps).forEach(m=>{makeUndirected(m.walk);makeUndirected(m.vents);});
+Object.values(maps).forEach(m=>{
+  makeUndirected(m.walk);
+  makeUndirected(m.vents);
+});
 
 function rooms(){
-  const m=maps[document.getElementById("map").value];
-  return [...new Set([...Object.keys(m.walk),...Object.keys(m.vents)])].sort();
+  return [...new Set([
+    ...Object.keys(maps[chosenMap].walk),
+    ...Object.keys(maps[chosenMap].vents)
+  ])].sort();
 }
 
 function shortest(graph,start,end){
   if(!start||!end)return Infinity;
   if(start===end)return 0;
-  let q=[[start,0]],seen=new Set([start]);
+
+  let q=[[start,0]];
+  let seen=new Set([start]);
+
   while(q.length){
-    let [cur,d]=q.shift();
-    for(const nxt of graph[cur]||[]){
-      if(nxt===end)return d+1;
-      if(!seen.has(nxt)){seen.add(nxt);q.push([nxt,d+1]);}
+    const [cur,d]=q.shift();
+    for(const next of graph[cur]||[]){
+      if(next===end)return d+1;
+      if(!seen.has(next)){
+        seen.add(next);
+        q.push([next,d+1]);
+      }
     }
   }
   return Infinity;
 }
 
-function oneVentDistance(start,end){
-  const mapName=document.getElementById("map").value;
-  const walk=maps[mapName].walk;
-  const vents=maps[mapName].vents;
-
-  let best=shortest(walk,start,end);
-
-  for(const v1 in vents){
-    for(const v2 of vents[v1]){
-      const a=shortest(walk,start,v1);
-      const b=shortest(walk,v2,end);
-      if(a!==Infinity&&b!==Infinity){
-        best=Math.min(best,a+1+b);
-      }
-    }
-  }
-  return best;
+function directVent(start,end){
+  const vents=maps[chosenMap].vents;
+  return vents[start] && vents[start].includes(end);
 }
 
-function clear(p){return p.engineer||p.tracker||p.medscan;}
+function isClear(p){
+  return p.engineer||p.tracker||p.medscan;
+}
 
-function renderRooms(){
+function renderColorChoices(){
+  const div=document.getElementById("colorChoices");
+  div.innerHTML="";
+  allColors.forEach(c=>{
+    div.innerHTML+=`
+      <label>
+        <input type="checkbox" value="${c}">
+        ${c}
+      </label>
+    `;
+  });
+}
+
+function startGame(){
+  chosenMap=document.getElementById("mapSelect").value;
+
+  const selected=[...document.querySelectorAll("#colorChoices input:checked")]
+    .map(x=>x.value);
+
+  if(selected.length<4){
+    alert("Pick at least 4 colors.");
+    return;
+  }
+
+  players=selected.map(c=>({
+    color:c,
+    dead:false,
+    engineer:false,
+    tracker:false,
+    medscan:false,
+    location:"",
+    susPoints:0,
+    roundsSus:[],
+    fixedSabotages:0
+  }));
+
+  gameStarted=true;
+  round=1;
+  rounds=[];
+
+  document.getElementById("settings").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+
+  renderGame();
+  saveLocal();
+}
+
+function renderGame(){
+  document.getElementById("roundNum").textContent=round;
+
   const body=document.getElementById("bodyRoom");
   body.innerHTML="";
   rooms().forEach(r=>body.innerHTML+=`<option>${r}</option>`);
-  renderPlayers();
-}
 
-function renderPlayers(){
-  const div=document.getElementById("players");
   const dead=document.getElementById("deadPlayer");
-  div.innerHTML="";
   dead.innerHTML=`<option value="">Nobody</option>`;
+  players.filter(p=>!p.dead).forEach(p=>{
+    dead.innerHTML+=`<option>${p.color}</option>`;
+  });
 
+  const locDiv=document.getElementById("locations");
+  locDiv.innerHTML="";
   players.forEach(p=>{
-    if(!p.dead) dead.innerHTML+=`<option>${p.color}</option>`;
-
-    let roomOptions=rooms().map(r=>`<option ${p.location===r?"selected":""}>${r}</option>`).join("");
-
-    div.innerHTML+=`
-    <div class="card ${p.dead?'dead':''} ${clear(p)?'clear':''}" style="border-left:8px solid ${p.color}">
-      <b>${p.color}</b><br>
-      <label>Location:</label>
-      <select onchange="setLoc('${p.color}',this.value)">${roomOptions}</select>
-      <label><input type="checkbox" ${p.engineer?'checked':''} onchange="role('${p.color}','engineer',this.checked)"> Engineer</label>
-      <label><input type="checkbox" ${p.tracker?'checked':''} onchange="role('${p.color}','tracker',this.checked)"> Tracker</label>
-      <label><input type="checkbox" ${p.medscan?'checked':''} onchange="role('${p.color}','medscan',this.checked)"> Med scan clear</label>
-      Near-body count: ${p.nearBodyCount}<br>
-      Close-by-vent count: ${p.closeVentCount}
-    </div>`;
+    if(p.dead)return;
+    locDiv.innerHTML+=`
+      <div class="card">
+        <b>${p.color}</b>
+        <select onchange="setLocation('${p.color}',this.value)">
+          <option value="">Unknown</option>
+          ${rooms().map(r=>`<option ${p.location===r?"selected":""}>${r}</option>`).join("")}
+        </select>
+      </div>
+    `;
   });
 
-  rank();
-  saveLocal();
-}
-
-function setLoc(color,loc){
-  players.find(p=>p.color===color).location=loc;
-  rank();
-  saveLocal();
-}
-
-function role(color,r,val){
-  players.find(p=>p.color===color)[r]=val;
-  renderPlayers();
-}
-
-function saveRound(){
-  const dead=document.getElementById("deadPlayer").value;
-  const body=document.getElementById("bodyRoom").value;
-
-  let data=[];
-
-  players.forEach(p=>{
-    if(p.dead||clear(p)||!p.location)return;
-
-    const walk=shortest(maps[document.getElementById("map").value].walk,p.location,body);
-    const vent=oneVentDistance(p.location,body);
-
-    if(walk<=2)p.nearBodyCount++;
-    if(vent<=2 && vent<walk)p.closeVentCount++;
-
-    data.push({color:p.color,location:p.location,walk,vent});
+  const fixDiv=document.getElementById("fixers");
+  fixDiv.innerHTML="";
+  players.filter(p=>!p.dead).forEach(p=>{
+    fixDiv.innerHTML+=`
+      <label><input type="checkbox" class="fixer" value="${p.color}"> ${p.color}</label>
+    `;
   });
 
-  if(dead) players.find(p=>p.color===dead).dead=true;
-
-  rounds.push({
-    map:document.getElementById("map").value,
-    dead,
-    body,
-    data
+  const clearDiv=document.getElementById("clears");
+  clearDiv.innerHTML="";
+  players.filter(p=>!p.dead).forEach(p=>{
+    clearDiv.innerHTML+=`
+      <div class="card ${isClear(p)?"clear":""}">
+        <b>${p.color}</b>
+        <label><input type="checkbox" ${p.engineer?"checked":""} onchange="setClear('${p.color}','engineer',this.checked)"> Engineer</label>
+        <label><input type="checkbox" ${p.tracker?"checked":""} onchange="setClear('${p.color}','tracker',this.checked)"> Tracker</label>
+        <label><input type="checkbox" ${p.medscan?"checked":""} onchange="setClear('${p.color}','medscan',this.checked)"> Medbay / clear</label>
+      </div>
+    `;
   });
 
-  renderPlayers();
+  renderRanking();
   renderLog();
 }
 
-function scoreFor(p){
-  if(p.dead||clear(p)||!p.location)return -1;
-
-  const body=document.getElementById("bodyRoom").value;
-  const walk=shortest(maps[document.getElementById("map").value].walk,p.location,body);
-  const vent=oneVentDistance(p.location,body);
-
-  let score=0;
-
-  if(walk===0)score+=10;
-  else if(walk===1)score+=7;
-  else if(walk===2)score+=4;
-  else if(walk===3)score+=2;
-
-  if(vent<walk){
-    if(vent===1)score+=3;
-    else if(vent===2)score+=2;
-    else if(vent===3)score+=1;
-  }
-
-  score+=p.nearBodyCount*2;
-  score+=p.closeVentCount;
-
-  return {score,walk,vent};
+function setLocation(color,loc){
+  players.find(p=>p.color===color).location=loc;
+  saveLocal();
 }
 
-function rank(){
+function setClear(color,type,value){
+  players.find(p=>p.color===color)[type]=value;
+  renderGame();
+  saveLocal();
+}
+
+function saveRound(){
+  const body=document.getElementById("bodyRoom").value;
+  const deadColor=document.getElementById("deadPlayer").value;
+  const sabotage=document.getElementById("sabotage").value;
+  const fixers=[...document.querySelectorAll(".fixer:checked")].map(x=>x.value);
+
+  let susThisRound=[];
+
+  players.forEach(p=>{
+    if(p.dead||isClear(p)||!p.location)return;
+
+    const walk=shortest(maps[chosenMap].walk,p.location,body);
+    const vent=directVent(p.location,body);
+
+    if((walk>=1&&walk<=2)||vent){
+      p.susPoints++;
+      p.roundsSus.push(round);
+      susThisRound.push({
+        color:p.color,
+        location:p.location,
+        walk:walk===Infinity?"?":walk,
+        directVent:vent
+      });
+    }
+  });
+
+  fixers.forEach(c=>{
+    const p=players.find(x=>x.color===c);
+    if(p)p.fixedSabotages++;
+  });
+
+  if(deadColor){
+    const dead=players.find(p=>p.color===deadColor);
+    if(dead)dead.dead=true;
+  }
+
+  rounds.push({
+    round,
+    body,
+    dead:deadColor||"Nobody",
+    sabotage:sabotage||"None",
+    fixers,
+    susThisRound
+  });
+
+  round++;
+  document.getElementById("sabotage").value="";
+  renderGame();
+  saveLocal();
+}
+
+function renderRanking(){
   const tbody=document.getElementById("ranking");
   tbody.innerHTML="";
 
   const ranked=players
-    .filter(p=>!p.dead&&!clear(p))
-    .map(p=>({p,...scoreFor(p)}))
-    .sort((a,b)=>b.score-a.score);
+    .filter(p=>!p.dead&&!isClear(p))
+    .sort((a,b)=>b.susPoints-a.susPoints);
 
-  ranked.forEach((x,i)=>{
+  ranked.forEach((p,i)=>{
     tbody.innerHTML+=`
-    <tr>
-      <td>${i+1}</td>
-      <td>${x.p.color}</td>
-      <td>${x.score}</td>
-      <td>${x.walk===Infinity?'?' : x.walk}</td>
-      <td>${x.vent===Infinity?'?' : x.vent}</td>
-      <td>
-        At ${x.p.location || "unknown"}.
-        ${x.walk<=2?"Very close by walking.":""}
-        ${x.vent<x.walk?"Closer with one vent use.":""}
-      </td>
-    </tr>`;
+      <tr>
+        <td>${i+1}</td>
+        <td>${p.color}</td>
+        <td>${p.susPoints}</td>
+        <td>
+          Sus rounds: ${p.roundsSus.length?p.roundsSus.join(", "):"none"}.
+          Fixed sabotages: ${p.fixedSabotages}.
+        </td>
+      </tr>
+    `;
   });
 }
 
 function renderLog(){
   const log=document.getElementById("log");
   log.innerHTML="";
-  rounds.forEach((r,i)=>{
+
+  rounds.forEach(r=>{
     log.innerHTML+=`
-    <div class="card">
-      <b>Round ${i+1}</b><br>
-      Map: ${r.map}<br>
-      Dead: ${r.dead||"Nobody"}<br>
-      Body: ${r.body}<br>
-      ${r.data.map(d=>`${d.color}: ${d.location}, walk ${d.walk}, vent ${d.vent}`).join("<br>")}
-    </div>`;
+      <div class="card">
+        <b>Round ${r.round}</b><br>
+        Dead: ${r.dead}<br>
+        Body: ${r.body}<br>
+        Sabotage: ${r.sabotage}<br>
+        Fixed by: ${r.fixers.length?r.fixers.join(", "):"Nobody"}<br>
+        Got +1 sus:
+        ${r.susThisRound.length
+          ? r.susThisRound.map(s =>
+            `${s.color} at ${s.location} — walk ${s.walk}${s.directVent?", direct vent":""}`
+          ).join("<br>")
+          : "Nobody"}
+      </div>
+    `;
   });
 }
 
 function resetGame(){
-  if(!confirm("Reset tracker?"))return;
-  localStorage.removeItem("amongDistanceTracker");
-  players=colors.map(c=>({
-    color:c,dead:false,engineer:false,tracker:false,medscan:false,
-    location:"",nearBodyCount:0,closeVentCount:0
-  }));
+  localStorage.removeItem("amongSusTrackerV2");
+  gameStarted=false;
+  chosenMap="";
+  round=1;
+  players=[];
   rounds=[];
-  renderRooms();
+
+  document.getElementById("game").classList.add("hidden");
+  document.getElementById("settings").classList.remove("hidden");
+
+  renderColorChoices();
 }
 
 function saveLocal(){
-  localStorage.setItem("amongDistanceTracker",JSON.stringify({players,rounds}));
+  localStorage.setItem("amongSusTrackerV2",JSON.stringify({
+    gameStarted,chosenMap,round,players,rounds
+  }));
 }
 
-const saved=localStorage.getItem("amongDistanceTracker");
-if(saved){
-  const d=JSON.parse(saved);
-  players=d.players;
-  rounds=d.rounds;
+function loadLocal(){
+  const saved=localStorage.getItem("amongSusTrackerV2");
+  if(!saved){
+    renderColorChoices();
+    return;
+  }
+
+  const data=JSON.parse(saved);
+  gameStarted=data.gameStarted;
+  chosenMap=data.chosenMap;
+  round=data.round;
+  players=data.players;
+  rounds=data.rounds;
+
+  if(gameStarted){
+    document.getElementById("settings").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+    renderGame();
+  }else{
+    renderColorChoices();
+  }
 }
 
-renderRooms();
-renderLog();
+loadLocal();
 </script>
 </body>
 </html>
