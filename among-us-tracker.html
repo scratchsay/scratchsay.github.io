@@ -1,270 +1,383 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<title>Among Us Suspicion Tracker</title>
+<meta charset="UTF-8">
+<title>Among Us Distance Suspicion Tracker</title>
 <style>
-  body { font-family: Arial, sans-serif; background:#111; color:white; padding:20px; }
-  h1,h2 { color:#ffcc66; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap:8px; }
-  .card { background:#222; padding:10px; border-radius:10px; }
-  label { display:block; margin:4px 0; }
-  button, select, input {
-    margin:5px 0; padding:8px; border-radius:8px; border:none;
-  }
-  button { cursor:pointer; background:#ffcc66; }
-  .player { border-left:8px solid gray; }
-  .dead { opacity:.45; }
-  .clear { outline:2px solid #66ff99; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; }
-  th,td { border:1px solid #555; padding:8px; text-align:left; }
-  th { background:#333; }
+body{font-family:Arial;background:#111;color:white;padding:20px}
+.card{background:#222;padding:10px;border-radius:10px;margin:8px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+button,select,input{padding:8px;border-radius:8px;border:none;margin:4px}
+button{background:#ffcc66;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #555;padding:8px}
+th{background:#333}
+.dead{opacity:.45}
+.clear{outline:2px solid #66ff99}
 </style>
 </head>
 <body>
 
-<h1>Among Us Suspicion Tracker</h1>
+<h1>Among Us Distance Suspicion Tracker</h1>
 
-<h2>Players</h2>
+<div class="card">
+  <label>Map:</label>
+  <select id="map" onchange="renderRooms()">
+    <option value="airship">Airship</option>
+    <option value="polus">Polus</option>
+    <option value="skeld">Skeld</option>
+  </select>
+
+  <label>Dead player:</label>
+  <select id="deadPlayer"></select>
+
+  <label>Body location:</label>
+  <select id="bodyRoom"></select>
+
+  <button onclick="saveRound()">Save Round</button>
+  <button onclick="resetGame()">Reset</button>
+</div>
+
+<h2>Player Locations / Clears</h2>
 <div id="players" class="grid"></div>
-
-<h2>New Round</h2>
-
-<label>Who died?</label>
-<select id="deadPlayer"></select>
-
-<label>Where was the body?</label>
-<input id="bodyLocation" placeholder="Electrical, Cafeteria, unsure..." />
-<button onclick="setUnsure()">Unsure</button>
-
-<h3>Who was near the body?</h3>
-<div id="nearBody" class="grid"></div>
-
-<h3>Special clears / roles</h3>
-<div id="roles" class="grid"></div>
-
-<h3>Sabotage</h3>
-<select id="sabotage">
-  <option value="">No sabotage</option>
-  <option>Lights</option>
-  <option>Reactor</option>
-  <option>O2</option>
-  <option>Comms</option>
-  <option>Doors</option>
-</select>
-
-<h3>Who fixed sabotage?</h3>
-<div id="fixers" class="grid"></div>
-
-<button onclick="saveRound()">Save Round</button>
-<button onclick="resetGame()">Reset Game</button>
 
 <h2>Suspicion Ranking</h2>
 <table>
-  <thead>
-    <tr>
-      <th>Rank</th>
-      <th>Player</th>
-      <th>Suspicion</th>
-      <th>Reason</th>
-    </tr>
-  </thead>
-  <tbody id="ranking"></tbody>
+<thead>
+<tr>
+<th>Rank</th><th>Player</th><th>Score</th><th>Walk Dist</th><th>Vent Dist</th><th>Reason</th>
+</tr>
+</thead>
+<tbody id="ranking"></tbody>
 </table>
 
 <h2>Round Log</h2>
 <div id="log"></div>
 
 <script>
-const colors = [
-  "gray", "coral", "black", "white", "brown",
-  "blue", "orange", "green", "pink", "maroon"
-];
+const colors=["gray","coral","black","white","brown","blue","orange","green","pink","maroon"];
 
-let players = colors.map(color => ({
-  color,
-  dead:false,
-  engineer:false,
-  tracker:false,
-  medscan:false,
-  nearBodyCount:0,
-  sabotageFixCount:0
+let players=colors.map(c=>({
+  color:c,dead:false,engineer:false,tracker:false,medscan:false,
+  location:"",nearBodyCount:0,closeVentCount:0
 }));
 
-let rounds = [];
+let rounds=[];
 
-function render() {
-  const playersDiv = document.getElementById("players");
-  const deadSelect = document.getElementById("deadPlayer");
-  const nearDiv = document.getElementById("nearBody");
-  const rolesDiv = document.getElementById("roles");
-  const fixersDiv = document.getElementById("fixers");
+const maps={
+airship:{
+walk:{
+"Vault":["Brig"],
+"Brig":["Vault","Gap Room","Engine Room"],
+"Cockpit":["Communications"],
+"Communications":["Cockpit","Engine Room","Armory"],
+"Engine Room":["Communications","Brig","Main Hall","Armory"],
+"Armory":["Communications","Engine Room","Kitchen"],
+"Kitchen":["Armory","Viewing Deck","Security"],
+"Viewing Deck":["Kitchen"],
+"Security":["Kitchen","Electrical"],
+"Main Hall":["Gap Room","Engine Room","Electrical","Showers","Wideecam"],
+"Gap Room":["Meeting Room","Brig","Records","Main Hall"],
+"Meeting Room":["Gap Room"],
+"Records":["Gap Room","Showers","Lounge"],
+"Lounge":["Records","Cargo Bay","PA"],
+"Cargo Bay":["Lounge","Medical"],
+"Medical":["Cargo Bay","Electrical"],
+"Electrical":["Security","Main Hall","Showers","Medical"],
+"Showers":["Records","Main Hall","Electrical"],
+"PA":["Lounge"],
+"Wideecam":["Main Hall"]
+},
+vents:{}
+},
 
-  playersDiv.innerHTML = "";
-  deadSelect.innerHTML = `<option value="">Nobody / skipped</option>`;
-  nearDiv.innerHTML = "";
-  rolesDiv.innerHTML = "";
-  fixersDiv.innerHTML = "";
+polus:{
+walk:{
+"Dropship":["North Outside"],
+"North Outside":["Dropship","Security","Electrical","Storage","Laboratory"],
+"Security":["North Outside","Electrical"],
+"Electrical":["Security","North Outside","O2","Communications"],
+"O2":["Electrical","Boiler Room","Outside"],
+"Outside":["O2","Admin","Storage","Communications"],
+"Boiler Room":["O2","Weapons"],
+"Weapons":["Boiler Room","Office","Communications"],
+"Communications":["Electrical","Weapons","Office","Storage","Outside"],
+"Office":["Weapons","Communications","Storage","Admin"],
+"Storage":["Office","Laboratory","Communications","Outside"],
+"Admin":["Office","Decontamination"],
+"Decontamination":["Admin","Specimen Room"],
+"Specimen Room":["Decontamination","Laboratory"],
+"Laboratory":["Specimen Room","North Outside","Medical","North Decontamination","Storage"],
+"North Decontamination":["Laboratory","Medical"],
+"Medical":["Laboratory","North Decontamination"]
+},
+vents:{
+"Security":["Electrical","O2"],
+"Electrical":["Security","O2"],
+"O2":["Security","Electrical"],
+"Office":["Admin","Communications","Laboratory Entrance","East Lava"],
+"Admin":["Office","Communications"],
+"Communications":["Office","Admin"],
+"Storage":["Laboratory","North Outside"],
+"Laboratory":["Storage","North Outside","Laboratory Entrance"],
+"North Outside":["Storage","Laboratory"],
+"Laboratory Entrance":["Office","East Lava","Laboratory"],
+"East Lava":["Office","Laboratory Entrance"]
+}
+},
 
-  players.forEach(p => {
-    playersDiv.innerHTML += `
-      <div class="card player ${p.dead ? "dead" : ""} ${isCleared(p) ? "clear" : ""}" style="border-color:${p.color}">
-        <b>${p.color}</b><br>
-        Near body: ${p.nearBodyCount}<br>
-        Fixed sabotages: ${p.sabotageFixCount}<br>
-        ${p.engineer ? "Engineer<br>" : ""}
-        ${p.tracker ? "Tracker<br>" : ""}
-        ${p.medscan ? "Med scan clear<br>" : ""}
-      </div>
-    `;
+skeld:{
+walk:{
+"Cafeteria":["Upper Engine","MedBay","Weapons","Admin","Storage"],
+"Upper Engine":["Cafeteria","Reactor","Security","Lower Engine"],
+"Reactor":["Upper Engine","Lower Engine","Security"],
+"Security":["Upper Engine","Reactor","Electrical","Lower Engine"],
+"Lower Engine":["Upper Engine","Reactor","Electrical","Storage"],
+"Electrical":["Lower Engine","Security","Storage"],
+"Storage":["Cafeteria","Lower Engine","Electrical","Admin","Communications","Shields"],
+"Admin":["Cafeteria","Storage"],
+"Weapons":["Cafeteria","O2","Navigation"],
+"O2":["Weapons","Navigation","Admin"],
+"Navigation":["Weapons","O2","Shields"],
+"Shields":["Navigation","Communications","Storage"],
+"Communications":["Storage","Shields"],
+"MedBay":["Cafeteria","Upper Hallway"],
+"Upper Hallway":["MedBay","Cafeteria"],
+"Cafeteria Hall":["Cafeteria","Admin"]
+},
+vents:{
+"Reactor":["Upper Engine","Lower Engine"],
+"Upper Engine":["Reactor"],
+"Lower Engine":["Reactor"],
+"Electrical":["Security","MedBay"],
+"Security":["Electrical","MedBay"],
+"MedBay":["Electrical","Security"],
+"Admin":["Cafeteria Hall","Navigation","Shields"],
+"Cafeteria Hall":["Admin","Navigation","Shields"],
+"Navigation":["Admin","Cafeteria Hall","Shields"],
+"Shields":["Admin","Cafeteria Hall","Navigation"]
+}
+}
+};
 
-    if (!p.dead) {
-      deadSelect.innerHTML += `<option value="${p.color}">${p.color}</option>`;
+function makeUndirected(graph){
+  for(const a in graph){
+    graph[a].forEach(b=>{
+      if(!graph[b]) graph[b]=[];
+      if(!graph[b].includes(a)) graph[b].push(a);
+    });
+  }
+}
+Object.values(maps).forEach(m=>{makeUndirected(m.walk);makeUndirected(m.vents);});
+
+function rooms(){
+  const m=maps[document.getElementById("map").value];
+  return [...new Set([...Object.keys(m.walk),...Object.keys(m.vents)])].sort();
+}
+
+function shortest(graph,start,end){
+  if(!start||!end)return Infinity;
+  if(start===end)return 0;
+  let q=[[start,0]],seen=new Set([start]);
+  while(q.length){
+    let [cur,d]=q.shift();
+    for(const nxt of graph[cur]||[]){
+      if(nxt===end)return d+1;
+      if(!seen.has(nxt)){seen.add(nxt);q.push([nxt,d+1]);}
     }
+  }
+  return Infinity;
+}
 
-    nearDiv.innerHTML += `
-      <label><input type="checkbox" class="near" value="${p.color}" ${p.dead ? "disabled" : ""}> ${p.color}</label>
-    `;
+function oneVentDistance(start,end){
+  const mapName=document.getElementById("map").value;
+  const walk=maps[mapName].walk;
+  const vents=maps[mapName].vents;
 
-    fixersDiv.innerHTML += `
-      <label><input type="checkbox" class="fixer" value="${p.color}" ${p.dead ? "disabled" : ""}> ${p.color}</label>
-    `;
+  let best=shortest(walk,start,end);
 
-    rolesDiv.innerHTML += `
-      <div class="card">
-        <b>${p.color}</b>
-        <label><input type="checkbox" onchange="toggleRole('${p.color}','engineer',this.checked)" ${p.engineer ? "checked" : ""}> Engineer</label>
-        <label><input type="checkbox" onchange="toggleRole('${p.color}','tracker',this.checked)" ${p.tracker ? "checked" : ""}> Tracker</label>
-        <label><input type="checkbox" onchange="toggleRole('${p.color}','medscan',this.checked)" ${p.medscan ? "checked" : ""}> Med scan</label>
-      </div>
-    `;
+  for(const v1 in vents){
+    for(const v2 of vents[v1]){
+      const a=shortest(walk,start,v1);
+      const b=shortest(walk,v2,end);
+      if(a!==Infinity&&b!==Infinity){
+        best=Math.min(best,a+1+b);
+      }
+    }
+  }
+  return best;
+}
+
+function clear(p){return p.engineer||p.tracker||p.medscan;}
+
+function renderRooms(){
+  const body=document.getElementById("bodyRoom");
+  body.innerHTML="";
+  rooms().forEach(r=>body.innerHTML+=`<option>${r}</option>`);
+  renderPlayers();
+}
+
+function renderPlayers(){
+  const div=document.getElementById("players");
+  const dead=document.getElementById("deadPlayer");
+  div.innerHTML="";
+  dead.innerHTML=`<option value="">Nobody</option>`;
+
+  players.forEach(p=>{
+    if(!p.dead) dead.innerHTML+=`<option>${p.color}</option>`;
+
+    let roomOptions=rooms().map(r=>`<option ${p.location===r?"selected":""}>${r}</option>`).join("");
+
+    div.innerHTML+=`
+    <div class="card ${p.dead?'dead':''} ${clear(p)?'clear':''}" style="border-left:8px solid ${p.color}">
+      <b>${p.color}</b><br>
+      <label>Location:</label>
+      <select onchange="setLoc('${p.color}',this.value)">${roomOptions}</select>
+      <label><input type="checkbox" ${p.engineer?'checked':''} onchange="role('${p.color}','engineer',this.checked)"> Engineer</label>
+      <label><input type="checkbox" ${p.tracker?'checked':''} onchange="role('${p.color}','tracker',this.checked)"> Tracker</label>
+      <label><input type="checkbox" ${p.medscan?'checked':''} onchange="role('${p.color}','medscan',this.checked)"> Med scan clear</label>
+      Near-body count: ${p.nearBodyCount}<br>
+      Close-by-vent count: ${p.closeVentCount}
+    </div>`;
   });
 
-  renderRanking();
+  rank();
+  saveLocal();
+}
+
+function setLoc(color,loc){
+  players.find(p=>p.color===color).location=loc;
+  rank();
+  saveLocal();
+}
+
+function role(color,r,val){
+  players.find(p=>p.color===color)[r]=val;
+  renderPlayers();
+}
+
+function saveRound(){
+  const dead=document.getElementById("deadPlayer").value;
+  const body=document.getElementById("bodyRoom").value;
+
+  let data=[];
+
+  players.forEach(p=>{
+    if(p.dead||clear(p)||!p.location)return;
+
+    const walk=shortest(maps[document.getElementById("map").value].walk,p.location,body);
+    const vent=oneVentDistance(p.location,body);
+
+    if(walk<=2)p.nearBodyCount++;
+    if(vent<=2 && vent<walk)p.closeVentCount++;
+
+    data.push({color:p.color,location:p.location,walk,vent});
+  });
+
+  if(dead) players.find(p=>p.color===dead).dead=true;
+
+  rounds.push({
+    map:document.getElementById("map").value,
+    dead,
+    body,
+    data
+  });
+
+  renderPlayers();
   renderLog();
-  localStorage.setItem("amongUsTracker", JSON.stringify({players, rounds}));
 }
 
-function isCleared(p) {
-  return p.engineer || p.tracker || p.medscan;
-}
+function scoreFor(p){
+  if(p.dead||clear(p)||!p.location)return -1;
 
-function toggleRole(color, role, checked) {
-  const p = players.find(x => x.color === color);
-  p[role] = checked;
-  render();
-}
+  const body=document.getElementById("bodyRoom").value;
+  const walk=shortest(maps[document.getElementById("map").value].walk,p.location,body);
+  const vent=oneVentDistance(p.location,body);
 
-function setUnsure() {
-  document.getElementById("bodyLocation").value = "Unsure";
-}
+  let score=0;
 
-function saveRound() {
-  const dead = document.getElementById("deadPlayer").value;
-  const location = document.getElementById("bodyLocation").value || "Unsure";
-  const near = [...document.querySelectorAll(".near:checked")].map(x => x.value);
-  const sabotage = document.getElementById("sabotage").value;
-  const fixers = [...document.querySelectorAll(".fixer:checked")].map(x => x.value);
+  if(walk===0)score+=10;
+  else if(walk===1)score+=7;
+  else if(walk===2)score+=4;
+  else if(walk===3)score+=2;
 
-  if (dead) {
-    players.find(p => p.color === dead).dead = true;
+  if(vent<walk){
+    if(vent===1)score+=3;
+    else if(vent===2)score+=2;
+    else if(vent===3)score+=1;
   }
 
-  near.forEach(color => {
-    const p = players.find(x => x.color === color);
-    if (p && !isCleared(p)) p.nearBodyCount++;
-  });
+  score+=p.nearBodyCount*2;
+  score+=p.closeVentCount;
 
-  fixers.forEach(color => {
-    const p = players.find(x => x.color === color);
-    if (p) p.sabotageFixCount++;
-  });
-
-  rounds.push({ dead, location, near, sabotage, fixers });
-
-  document.getElementById("bodyLocation").value = "";
-  document.getElementById("sabotage").value = "";
-
-  render();
+  return {score,walk,vent};
 }
 
-function suspicionScore(p) {
-  if (p.dead || isCleared(p)) return -1;
+function rank(){
+  const tbody=document.getElementById("ranking");
+  tbody.innerHTML="";
 
-  let score = 0;
-  score += p.nearBodyCount * 3;
-  score -= p.sabotageFixCount * 1;
+  const ranked=players
+    .filter(p=>!p.dead&&!clear(p))
+    .map(p=>({p,...scoreFor(p)}))
+    .sort((a,b)=>b.score-a.score);
 
-  return Math.max(score, 0);
-}
-
-function renderRanking() {
-  const ranking = document.getElementById("ranking");
-  ranking.innerHTML = "";
-
-  const ranked = players
-    .filter(p => !p.dead && !isCleared(p))
-    .map(p => ({...p, score:suspicionScore(p)}))
-    .sort((a,b) => b.score - a.score);
-
-  ranked.forEach((p, i) => {
-    ranking.innerHTML += `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${p.color}</td>
-        <td>${p.score}</td>
-        <td>
-          Near body ${p.nearBodyCount} time(s).
-          Fixed sabotage ${p.sabotageFixCount} time(s).
-        </td>
-      </tr>
-    `;
+  ranked.forEach((x,i)=>{
+    tbody.innerHTML+=`
+    <tr>
+      <td>${i+1}</td>
+      <td>${x.p.color}</td>
+      <td>${x.score}</td>
+      <td>${x.walk===Infinity?'?' : x.walk}</td>
+      <td>${x.vent===Infinity?'?' : x.vent}</td>
+      <td>
+        At ${x.p.location || "unknown"}.
+        ${x.walk<=2?"Very close by walking.":""}
+        ${x.vent<x.walk?"Closer with one vent use.":""}
+      </td>
+    </tr>`;
   });
 }
 
-function renderLog() {
-  const log = document.getElementById("log");
-  log.innerHTML = "";
-
-  rounds.forEach((r, i) => {
-    log.innerHTML += `
-      <div class="card">
-        <b>Round ${i + 1}</b><br>
-        Dead: ${r.dead || "Nobody"}<br>
-        Body location: ${r.location}<br>
-        Near body: ${r.near.length ? r.near.join(", ") : "Nobody marked"}<br>
-        Sabotage: ${r.sabotage || "None"}<br>
-        Fixed by: ${r.fixers.length ? r.fixers.join(", ") : "Nobody marked"}
-      </div>
-    `;
+function renderLog(){
+  const log=document.getElementById("log");
+  log.innerHTML="";
+  rounds.forEach((r,i)=>{
+    log.innerHTML+=`
+    <div class="card">
+      <b>Round ${i+1}</b><br>
+      Map: ${r.map}<br>
+      Dead: ${r.dead||"Nobody"}<br>
+      Body: ${r.body}<br>
+      ${r.data.map(d=>`${d.color}: ${d.location}, walk ${d.walk}, vent ${d.vent}`).join("<br>")}
+    </div>`;
   });
 }
 
-function resetGame() {
-  if (!confirm("Reset the whole tracker?")) return;
-  localStorage.removeItem("amongUsTracker");
-  players = colors.map(color => ({
-    color,
-    dead:false,
-    engineer:false,
-    tracker:false,
-    medscan:false,
-    nearBodyCount:0,
-    sabotageFixCount:0
+function resetGame(){
+  if(!confirm("Reset tracker?"))return;
+  localStorage.removeItem("amongDistanceTracker");
+  players=colors.map(c=>({
+    color:c,dead:false,engineer:false,tracker:false,medscan:false,
+    location:"",nearBodyCount:0,closeVentCount:0
   }));
-  rounds = [];
-  render();
+  rounds=[];
+  renderRooms();
 }
 
-const saved = localStorage.getItem("amongUsTracker");
-if (saved) {
-  const data = JSON.parse(saved);
-  players = data.players;
-  rounds = data.rounds;
+function saveLocal(){
+  localStorage.setItem("amongDistanceTracker",JSON.stringify({players,rounds}));
 }
 
-render();
+const saved=localStorage.getItem("amongDistanceTracker");
+if(saved){
+  const d=JSON.parse(saved);
+  players=d.players;
+  rounds=d.rounds;
+}
+
+renderRooms();
+renderLog();
 </script>
-
 </body>
 </html>
