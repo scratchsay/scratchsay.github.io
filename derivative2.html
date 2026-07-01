@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Trig/Fraction Second Derivative Practice</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      padding: 30px;
+      max-width: 850px;
+      margin: auto;
+    }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .problem {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      margin-top: 15px;
+      margin-right: 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #4f46e5;
+      color: white;
+    }
+    button.secondary {
+      background: #555;
+    }
+    .correct {
+      color: green;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    .wrong {
+      color: crimson;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    .steps {
+      background: #eef2ff;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 10px;
+      line-height: 1.6;
+    }
+    code {
+      background: #eee;
+      padding: 2px 5px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Second Derivative Practice</h1>
+    <p>Type answers like: <code>2/x^3 - 2*sin(2x)</code> or <code>sec(x)*(tan(x)^2 + sec(x)^2)</code></p>
+
+    <div class="problem" id="problem"></div>
+
+    <input id="answer" placeholder="Type your second derivative here">
+
+    <br>
+    <button onclick="checkAnswer()">Check Answer</button>
+    <button class="secondary" onclick="newProblem()">New Problem</button>
+    <button class="secondary" onclick="showSteps()">Show Steps</button>
+
+    <div id="result"></div>
+    <div id="steps" class="steps" style="display:none;"></div>
+  </div>
+
+<script>
+const problems = [
+  {
+    problem: "d²/dx² (1/x + cos(x)sin(x))",
+    answer: "2/x^3 - 2*sin(2*x)",
+    steps: `
+      Start with f(x) = 1/x + cos(x)sin(x).<br><br>
+      Rewrite 1/x as x⁻¹.<br>
+      First derivative: f'(x) = -1/x² + cos²(x) - sin²(x).<br>
+      Use identity cos²(x) - sin²(x) = cos(2x).<br>
+      So f'(x) = -1/x² + cos(2x).<br><br>
+      Differentiate again:<br>
+      d/dx[-1/x²] = 2/x³<br>
+      d/dx[cos(2x)] = -2sin(2x)<br><br>
+      Final answer: <b>2/x³ - 2sin(2x)</b>
+    `
+  },
+  {
+    problem: "d²/dx² (sec(x))",
+    answer: "sec(x)*(tan(x)^2 + sec(x)^2)",
+    steps: `
+      Start with f(x) = sec(x).<br><br>
+      First derivative:<br>
+      f'(x) = sec(x)tan(x).<br><br>
+      Now use product rule:<br>
+      f''(x) = [sec(x)tan(x)]tan(x) + sec(x)sec²(x).<br><br>
+      So:<br>
+      f''(x) = sec(x)tan²(x) + sec³(x).<br><br>
+      Factor sec(x):<br>
+      Final answer: <b>sec(x)(tan²(x) + sec²(x))</b>
+    `
+  },
+  {
+    problem: "d²/dx² (4x sec(x))",
+    answer: "8*sec(x)*tan(x) + 4*x*sec(x)*(tan(x)^2 + sec(x)^2)",
+    steps: `
+      Start with f(x) = 4xsec(x).<br><br>
+      First derivative using product rule:<br>
+      f'(x) = 4sec(x) + 4xsec(x)tan(x).<br><br>
+      Differentiate again:<br>
+      d/dx[4sec(x)] = 4sec(x)tan(x).<br><br>
+      For 4xsec(x)tan(x), use product rule:<br>
+      derivative = 4sec(x)tan(x) + 4x[sec(x)(tan²(x) + sec²(x))].<br><br>
+      Combine:<br>
+      Final answer: <b>8sec(x)tan(x) + 4xsec(x)(tan²(x) + sec²(x))</b>
+    `
+  },
+  {
+    problem: "d²/dx² (1/x + sin(x)cos(x))",
+    answer: "2/x^3 - 2*sin(2*x)",
+    steps: `
+      sin(x)cos(x) is the same as cos(x)sin(x).<br><br>
+      First derivative:<br>
+      d/dx[1/x] = -1/x²<br>
+      d/dx[sin(x)cos(x)] = cos²(x) - sin²(x) = cos(2x)<br><br>
+      So f'(x) = -1/x² + cos(2x).<br><br>
+      Second derivative:<br>
+      Final answer: <b>2/x³ - 2sin(2x)</b>
+    `
+  },
+  {
+    problem: "d²/dx² (tan(x))",
+    answer: "2*sec(x)^2*tan(x)",
+    steps: `
+      Start with f(x) = tan(x).<br><br>
+      First derivative:<br>
+      f'(x) = sec²(x).<br><br>
+      Differentiate sec²(x) using chain rule:<br>
+      f''(x) = 2sec(x)(sec(x)tan(x)).<br><br>
+      Final answer: <b>2sec²(x)tan(x)</b>
+    `
+  },
+  {
+    problem: "d²/dx² (1/x + tan(x))",
+    answer: "2/x^3 + 2*sec(x)^2*tan(x)",
+    steps: `
+      Start with f(x) = 1/x + tan(x).<br><br>
+      First derivative:<br>
+      f'(x) = -1/x² + sec²(x).<br><br>
+      Second derivative:<br>
+      d/dx[-1/x²] = 2/x³<br>
+      d/dx[sec²(x)] = 2sec²(x)tan(x)<br><br>
+      Final answer: <b>2/x³ + 2sec²(x)tan(x)</b>
+    `
+  }
+];
+
+let current;
+
+function fixInput(str) {
+  return str
+    .replaceAll("sec", "1/cos")
+    .replaceAll("csc", "1/sin")
+    .replaceAll("cot", "1/tan")
+    .replace(/(\d)(x)/g, "$1*$2")
+    .replace(/(x)(sin|cos|tan)/g, "$1*$2")
+    .replace(/(\))(\()/g, "$1*$2")
+    .replace(/(\d)(sin|cos|tan)/g, "$1*$2");
+}
+
+function newProblem() {
+  current = problems[Math.floor(Math.random() * problems.length)];
+  document.getElementById("problem").innerHTML = current.problem;
+  document.getElementById("answer").value = "";
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("steps").style.display = "none";
+  document.getElementById("steps").innerHTML = "";
+}
+
+function checkAnswer() {
+  const userRaw = document.getElementById("answer").value.trim();
+  if (!userRaw) return;
+
+  const userExpr = fixInput(userRaw);
+  const correctExpr = fixInput(current.answer);
+
+  let correct = true;
+
+  for (let val of [0.4, 0.7, 1.1, 1.5, 2.0]) {
+    try {
+      let userVal = math.evaluate(userExpr, {x: val});
+      let correctVal = math.evaluate(correctExpr, {x: val});
+
+      if (Math.abs(userVal - correctVal) > 0.001) {
+        correct = false;
+        break;
+      }
+    } catch {
+      correct = false;
+      break;
+    }
+  }
+
+  if (correct) {
+    document.getElementById("result").innerHTML =
+      `<div class="correct">Correct!</div>`;
+  } else {
+    document.getElementById("result").innerHTML =
+      `<div class="wrong">Not quite. Look at the steps below.</div>`;
+    showSteps();
+  }
+}
+
+function showSteps() {
+  document.getElementById("steps").style.display = "block";
+  document.getElementById("steps").innerHTML = current.steps;
+}
+
+newProblem();
+</script>
+</body>
+</html>
