@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Acting Scene Study Notes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2, h3 {
+      color: #222;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .section {
+      border-top: 2px solid #ddd;
+      margin-top: 30px;
+      padding-top: 20px;
+    }
+
+    .character-box {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #222;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    .small-note {
+      font-size: 14px;
+      color: #555;
+    }
+
+    @media print {
+      button {
+        display: none;
+      }
+
+      body {
+        background: white;
+      }
+
+      .container {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🎬 Acting Scene Study Notes</h1>
+    <p class="small-note">
+      Use this to analyze movies, episodes, scenes, and actors like a reviewer + acting student.
+    </p>
+
+    <div class="section">
+      <h2>Basic Info</h2>
+
+      <label>Movie / Show Title</label>
+      <input type="text" placeholder="Example: Whiplash" />
+
+      <label>Episode</label>
+      <input type="text" placeholder="Example: Season 1, Episode 3" />
+
+      <label>Scene Name</label>
+      <input type="text" placeholder="Example: Dinner argument scene" />
+
+      <label>Timestamp</label>
+      <input type="text" placeholder="Example: 00:34:15 - 00:39:40" />
+
+      <label>Date Watched</label>
+      <input type="date" />
+
+      <label>Overall Scene Summary</label>
+      <textarea placeholder="What happens in this scene?"></textarea>
+    </div>
+
+    <div class="section">
+      <h2>Character Study</h2>
+
+      <div class="character-box">
+        <h3>Character 1</h3>
+
+        <label>Character Name</label>
+        <input type="text" placeholder="Character name" />
+
+        <label>Actor Name</label>
+        <input type="text" placeholder="Actor name" />
+
+        <label>Are they speaking or not speaking in this moment?</label>
+        <select>
+          <option>Speaking</option>
+          <option>Not Speaking</option>
+          <option>Both</option>
+        </select>
+
+        <h3>1. Objective</h3>
+        <label>What does this character want?</label>
+        <textarea></textarea>
+
+        <label>What is stopping them?</label>
+        <textarea></textarea>
+
+        <label>What are they trying to get from the other person?</label>
+        <textarea></textarea>
+
+        <h3>2. Listening / Reacting</h3>
+        <label>What do they do when they are not speaking?</label>
+        <textarea placeholder="Eye contact, reactions, interruptions, thinking, pauses..."></textarea>
+
+        <label>Do they react before speaking?</label>
+        <textarea></textarea>
+
+        <h3>3. Facial Expressions</h3>
+        <label>Eyes / Eyebrows / Jaw / Mouth / Forehead</label>
+        <textarea></textarea>
+
+        <label>Does their face match what they are saying?</label>
+        <textarea></textarea>
+
+        <h3>4. Body Language</h3>
+        <label>Posture, hands, walking, personal space, head position</label>
+        <textarea></textarea>
+
+        <label>Are they relaxed or tense?</label>
+        <textarea></textarea>
+
+        <h3>5. Voice</h3>
+        <label>Volume, speed, pitch, pauses, breathing</label>
+        <textarea></textarea>
+
+        <h3>6. Subtext</h3>
+        <label>What does the character really mean?</label>
+        <textarea placeholder="What are they hiding, avoiding, or secretly wanting?"></textarea>
+
+        <h3>7. Scene Change</h3>
+        <label>What were they like at the start?</label>
+        <textarea></textarea>
+
+        <label>What happened that changed them?</label>
+        <textarea></textarea>
+
+        <label>How are they different by the end?</label>
+        <textarea></textarea>
+
+        <h3>8. Relationship</h3>
+        <label>Who are they talking to, and how does that change their behavior?</label>
+        <textarea></textarea>
+
+        <h3>9. Small Choices</h3>
+        <label>Glances, breaths, looking away, tiny smiles, hesitation</label>
+        <textarea></textarea>
+
+        <h3>10. Truthfulness</h3>
+        <label>Did you believe this performance? Why?</label>
+        <textarea></textarea>
+
+        <label>Which moments felt real?</label>
+        <textarea></textarea>
+
+        <label>Which moments felt fake or less believable?</label>
+        <textarea></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Scene Rewatch Exercise</h2>
+
+      <label>1st Watch: Normal viewing</label>
+      <textarea placeholder="What did you notice emotionally/story-wise?"></textarea>
+
+      <label>2nd Watch: Watch only one actor</label>
+      <textarea></textarea>
+
+      <label>3rd Watch: Mute sound, watch body language</label>
+      <textarea></textarea>
+
+      <label>4th Watch: Listen without looking</label>
+      <textarea></textarea>
+    </div>
+
+    <div class="section">
+      <h2>Acting Journal Summary</h2>
+
+      <label>Favorite Performance</label>
+      <textarea></textarea>
+
+      <label>Character's Main Objective</label>
+      <textarea></textarea>
+
+      <label>Biggest Emotional Change</label>
+      <textarea></textarea>
+
+      <label>Three Interesting Physical Choices</label>
+      <textarea></textarea>
+
+      <label>One Vocal Choice</label>
+      <textarea></textarea>
+
+      <label>One Lesson to Try in My Own Acting</label>
+      <textarea></textarea>
+    </div>
+
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>
+</body>
+</html>
