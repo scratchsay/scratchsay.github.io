@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Acting Scene Study Notes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2, h3 {
+      color: #222;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .section {
+      border-top: 2px solid #ddd;
+      margin-top: 30px;
+      padding-top: 20px;
+    }
+
+    .character-box {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      margin-top: 20px;
+      margin-right: 10px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #222;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    .delete-btn {
+      background: #8b0000;
+    }
+
+    .delete-btn:hover {
+      background: #a40000;
+    }
+
+    #output {
+      min-height: 300px;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+
+    .small-note {
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🎬 Acting Scene Study Notes</h1>
+    <p class="small-note">Fill this out for one scene. Add as many characters as you need.</p>
+
+    <div class="section">
+      <h2>Basic Info</h2>
+
+      <label>Movie / Show Title</label>
+      <input id="title" type="text" placeholder="Example: Whiplash" />
+
+      <label>Episode</label>
+      <input id="episode" type="text" placeholder="Example: Season 1, Episode 3" />
+
+      <label>Scene Name</label>
+      <input id="scene" type="text" placeholder="Example: Dinner argument scene" />
+
+      <label>Timestamp</label>
+      <input id="timestamp" type="text" placeholder="Example: 00:34:15 - 00:39:40" />
+
+      <label>Date Watched</label>
+      <input id="date" type="date" />
+
+      <label>Overall Scene Summary</label>
+      <textarea id="summary" placeholder="What happens in this scene?"></textarea>
+    </div>
+
+    <div class="section">
+      <h2>Characters</h2>
+      <div id="characters"></div>
+      <button onclick="addCharacter()">+ Add Character</button>
+    </div>
+
+    <div class="section">
+      <h2>Notion Output</h2>
+      <button onclick="generateOutput()">Generate Notion Text</button>
+      <button onclick="copyOutput()">Copy Output</button>
+      <textarea id="output" readonly placeholder="Your copyable Notion notes will appear here..."></textarea>
+    </div>
+  </div>
+
+  <script>
+    let characterCount = 0;
+
+    function addCharacter() {
+      characterCount++;
+
+      const div = document.createElement("div");
+      div.className = "character-box";
+      div.innerHTML = `
+        <h3>Character ${characterCount}</h3>
+
+        <label>Character Name</label>
+        <input class="character-name" type="text" placeholder="Character name" />
+
+        <label>Actor Name</label>
+        <input class="actor-name" type="text" placeholder="Actor name" />
+
+        <label>Speaking Status</label>
+        <select class="speaking-status">
+          <option>Speaking</option>
+          <option>Not Speaking</option>
+          <option>Both Speaking and Not Speaking</option>
+        </select>
+
+        <h3>1. Objective</h3>
+        <label>What does this character want?</label>
+        <textarea class="objective-want"></textarea>
+
+        <label>What is stopping them?</label>
+        <textarea class="objective-obstacle"></textarea>
+
+        <label>What are they trying to get from the other person?</label>
+        <textarea class="objective-get"></textarea>
+
+        <h3>2. Listening / Reacting</h3>
+        <label>What do they do when they are not speaking?</label>
+        <textarea class="listening-not-speaking" placeholder="Eye contact, reactions, interruptions, thinking, pauses..."></textarea>
+
+        <label>Do they react before speaking?</label>
+        <textarea class="listening-react"></textarea>
+
+        <h3>3. Facial Expressions</h3>
+        <label>Eyes / Eyebrows / Jaw / Mouth / Forehead</label>
+        <textarea class="face-details"></textarea>
+
+        <label>Does their face match what they are saying?</label>
+        <textarea class="face-match"></textarea>
+
+        <h3>4. Body Language</h3>
+        <label>Posture, hands, walking, personal space, head position</label>
+        <textarea class="body-language"></textarea>
+
+        <label>Are they relaxed or tense?</label>
+        <textarea class="body-tension"></textarea>
+
+        <h3>5. Voice</h3>
+        <label>Volume, speed, pitch, pauses, breathing</label>
+        <textarea class="voice"></textarea>
+
+        <h3>6. Subtext</h3>
+        <label>What does the character really mean?</label>
+        <textarea class="subtext" placeholder="What are they hiding, avoiding, or secretly wanting?"></textarea>
+
+        <h3>7. Scene Change</h3>
+        <label>What were they like at the start?</label>
+        <textarea class="change-start"></textarea>
+
+        <label>What happened that changed them?</label>
+        <textarea class="change-moment"></textarea>
+
+        <label>How are they different by the end?</label>
+        <textarea class="change-end"></textarea>
+
+        <h3>8. Relationship</h3>
+        <label>Who are they talking to, and how does that change their behavior?</label>
+        <textarea class="relationship"></textarea>
+
+        <h3>9. Small Choices</h3>
+        <label>Glances, breaths, looking away, tiny smiles, hesitation</label>
+        <textarea class="small-choices"></textarea>
+
+        <h3>10. Truthfulness</h3>
+        <label>Did you believe this performance? Why?</label>
+        <textarea class="truth-believe"></textarea>
+
+        <label>Which moments felt real?</label>
+        <textarea class="truth-real"></textarea>
+
+        <label>Which moments felt fake or less believable?</label>
+        <textarea class="truth-fake"></textarea>
+
+        <button class="delete-btn" onclick="this.parentElement.remove()">Remove Character</button>
+      `;
+
+      document.getElementById("characters").appendChild(div);
+    }
+
+    function getValue(parent, selector) {
+      return parent.querySelector(selector)?.value || "";
+    }
+
+    function generateOutput() {
+      const characters = document.querySelectorAll(".character-box");
+
+      let output = `# Acting Scene Study Notes\n\n`;
+
+      output += `## Basic Info\n`;
+      output += `**Movie / Show:** ${document.getElementById("title").value}\n`;
+      output += `**Episode:** ${document.getElementById("episode").value}\n`;
+      output += `**Scene Name:** ${document.getElementById("scene").value}\n`;
+      output += `**Timestamp:** ${document.getElementById("timestamp").value}\n`;
+      output += `**Date Watched:** ${document.getElementById("date").value}\n\n`;
+      output += `## Overall Scene Summary\n${document.getElementById("summary").value}\n\n`;
+
+      characters.forEach((char, index) => {
+        output += `---\n\n`;
+        output += `## Character ${index + 1}: ${getValue(char, ".character-name")}\n`;
+        output += `**Actor:** ${getValue(char, ".actor-name")}\n`;
+        output += `**Speaking Status:** ${getValue(char, ".speaking-status")}\n\n`;
+
+        output += `### 1. Objective\n`;
+        output += `**What do they want?**\n${getValue(char, ".objective-want")}\n\n`;
+        output += `**What is stopping them?**\n${getValue(char, ".objective-obstacle")}\n\n`;
+        output += `**What are they trying to get from the other person?**\n${getValue(char, ".objective-get")}\n\n`;
+
+        output += `### 2. Listening / Reacting\n`;
+        output += `**What do they do when they are not speaking?**\n${getValue(char, ".listening-not-speaking")}\n\n`;
+        output += `**Do they react before speaking?**\n${getValue(char, ".listening-react")}\n\n`;
+
+        output += `### 3. Facial Expressions\n`;
+        output += `**Eyes / Eyebrows / Jaw / Mouth / Forehead**\n${getValue(char, ".face-details")}\n\n`;
+        output += `**Does their face match what they are saying?**\n${getValue(char, ".face-match")}\n\n`;
+
+        output += `### 4. Body Language\n`;
+        output += `**Posture, hands, walking, personal space, head position**\n${getValue(char, ".body-language")}\n\n`;
+        output += `**Relaxed or tense?**\n${getValue(char, ".body-tension")}\n\n`;
+
+        output += `### 5. Voice\n`;
+        output += `**Volume, speed, pitch, pauses, breathing**\n${getValue(char, ".voice")}\n\n`;
+
+        output += `### 6. Subtext\n`;
+        output += `**What do they really mean?**\n${getValue(char, ".subtext")}\n\n`;
+
+        output += `### 7. Scene Change\n`;
+        output += `**What were they like at the start?**\n${getValue(char, ".change-start")}\n\n`;
+        output += `**What happened that changed them?**\n${getValue(char, ".change-moment")}\n\n`;
+        output += `**How are they different by the end?**\n${getValue(char, ".change-end")}\n\n`;
+
+        output += `### 8. Relationship\n`;
+        output += `**Who are they talking to, and how does that change their behavior?**\n${getValue(char, ".relationship")}\n\n`;
+
+        output += `### 9. Small Choices\n`;
+        output += `**Glances, breaths, looking away, tiny smiles, hesitation**\n${getValue(char, ".small-choices")}\n\n`;
+
+        output += `### 10. Truthfulness\n`;
+        output += `**Did you believe this performance? Why?**\n${getValue(char, ".truth-believe")}\n\n`;
+        output += `**Which moments felt real?**\n${getValue(char, ".truth-real")}\n\n`;
+        output += `**Which moments felt fake or less believable?**\n${getValue(char, ".truth-fake")}\n\n`;
+      });
+
+      document.getElementById("output").value = output;
+    }
+
+    function copyOutput() {
+      const output = document.getElementById("output");
+      output.select();
+      document.execCommand("copy");
+      alert("Copied! Paste it into Notion.");
+    }
+
+    addCharacter();
+  </script>
+</body>
+</html>
