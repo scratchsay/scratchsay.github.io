@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Actor Observation Box</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    .box {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: #222;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    .message {
+      margin-top: 12px;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h1>Actor Observation Box</h1>
+
+    <label for="interaction">Interaction Name</label>
+    <input id="interaction" type="text" placeholder="Example: Person ordering coffee" />
+
+    <label for="date">Date</label>
+    <input id="date" type="date" />
+
+    <label for="category">Observation Category</label>
+    <select id="category">
+      <option>Physical Behavior</option>
+      <option>Voice</option>
+      <option>Facial Expressions</option>
+      <option>Emotional Transitions</option>
+      <option>Relationships</option>
+      <option>Objectives</option>
+      <option>Habits and Quirks</option>
+      <option>Group Dynamics</option>
+    </select>
+
+    <label for="whatObserved">What did you observe?</label>
+    <textarea id="whatObserved" placeholder="Describe what the person did, said, or showed."></textarea>
+
+    <label for="details">Specific Details</label>
+    <textarea id="details" placeholder="Posture, pace, gestures, tone, pauses, eye contact, etc."></textarea>
+
+    <label for="meaning">What might this reveal about the person?</label>
+    <textarea id="meaning" placeholder="What could they be feeling, wanting, hiding, or trying to do?"></textarea>
+
+    <label for="actingUse">How could you use this in acting?</label>
+    <textarea id="actingUse" placeholder="How could this help you play a character?"></textarea>
+
+    <button onclick="exportToNotion()">Export for Notion</button>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    // Auto-fill today's date
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("date").value = today;
+
+    function exportToNotion() {
+      const interaction = document.getElementById("interaction").value;
+      const date = document.getElementById("date").value;
+      const category = document.getElementById("category").value;
+      const whatObserved = document.getElementById("whatObserved").value;
+      const details = document.getElementById("details").value;
+      const meaning = document.getElementById("meaning").value;
+      const actingUse = document.getElementById("actingUse").value;
+
+      const notionText = `
+# ${interaction || "Untitled Observation"}
+
+**Date:** ${date}  
+**Category:** ${category}
+
+## What I Observed
+${whatObserved}
+
+## Specific Details
+${details}
+
+## What This Might Reveal
+${meaning}
+
+## How I Could Use This in Acting
+${actingUse}
+      `.trim();
+
+      navigator.clipboard.writeText(notionText).then(() => {
+        document.getElementById("message").textContent =
+          "Copied! You can now paste it into Notion.";
+      });
+    }
+  </script>
+
+</body>
+</html>
