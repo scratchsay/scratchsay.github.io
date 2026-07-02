@@ -2,151 +2,174 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Actor Observation Box</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-
-    .box {
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    }
-
-    h1 {
-      margin-top: 0;
-    }
-
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 15px;
-    }
-
+    body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; }
+    .box { max-width:750px; margin:auto; background:white; padding:20px; border-radius:14px; }
+    label { font-weight:bold; display:block; margin-top:15px; }
     input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 15px;
-      box-sizing: border-box;
+      width:100%; padding:10px; margin-top:6px;
+      border:1px solid #ccc; border-radius:8px; box-sizing:border-box;
     }
-
-    textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
-
+    textarea { min-height:75px; resize:vertical; }
     button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background: #222;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
+      margin-top:20px; width:100%; padding:12px;
+      background:#222; color:white; border:0; border-radius:10px; cursor:pointer;
     }
-
-    button:hover {
-      background: #444;
-    }
-
-    .message {
-      margin-top: 12px;
-      color: green;
-      font-weight: bold;
-    }
+    .message { margin-top:12px; color:green; font-weight:bold; }
   </style>
 </head>
 <body>
 
-  <div class="box">
-    <h1>Actor Observation Box</h1>
+<div class="box">
+  <h1>Actor Observation Box</h1>
 
-    <label for="interaction">Interaction Name</label>
-    <input id="interaction" type="text" placeholder="Example: Person ordering coffee" />
+  <label>Interaction Name</label>
+  <input id="interaction" placeholder="Example: Two friends arguing quietly" />
 
-    <label for="date">Date</label>
-    <input id="date" type="date" />
+  <label>Date</label>
+  <input id="date" type="date" />
 
-    <label for="category">Observation Category</label>
-    <select id="category">
-      <option>Physical Behavior</option>
-      <option>Voice</option>
-      <option>Facial Expressions</option>
-      <option>Emotional Transitions</option>
-      <option>Relationships</option>
-      <option>Objectives</option>
-      <option>Habits and Quirks</option>
-      <option>Group Dynamics</option>
-    </select>
+  <label>Location</label>
+  <input id="location" placeholder="Example: School hallway, café, bus stop" />
 
-    <label for="whatObserved">What did you observe?</label>
-    <textarea id="whatObserved" placeholder="Describe what the person did, said, or showed."></textarea>
+  <label>Observation Category</label>
+  <select id="category" onchange="loadQuestions()">
+    <option value="Physical Behavior">Physical Behavior</option>
+    <option value="Voice">Voice</option>
+    <option value="Facial Expressions">Facial Expressions</option>
+    <option value="Emotional Transitions">Emotional Transitions</option>
+    <option value="Relationships">Relationships</option>
+    <option value="Objectives">Objectives</option>
+    <option value="Habits and Quirks">Habits and Quirks</option>
+    <option value="Group Dynamics">Group Dynamics</option>
+  </select>
 
-    <label for="details">Specific Details</label>
-    <textarea id="details" placeholder="Posture, pace, gestures, tone, pauses, eye contact, etc."></textarea>
+  <div id="questions"></div>
 
-    <label for="meaning">What might this reveal about the person?</label>
-    <textarea id="meaning" placeholder="What could they be feeling, wanting, hiding, or trying to do?"></textarea>
+  <label>Overall Takeaway</label>
+  <textarea id="takeaway" placeholder="What are the biggest acting lessons from this observation?"></textarea>
 
-    <label for="actingUse">How could you use this in acting?</label>
-    <textarea id="actingUse" placeholder="How could this help you play a character?"></textarea>
+  <button onclick="exportToNotion()">Export for Notion</button>
+  <div id="message" class="message"></div>
+</div>
 
-    <button onclick="exportToNotion()">Export for Notion</button>
+<script>
+  document.getElementById("date").value = new Date().toISOString().split("T")[0];
 
-    <div id="message" class="message"></div>
-  </div>
+  const questionSets = {
+    "Physical Behavior": [
+      "How fast did they move?",
+      "How did they stand or sit?",
+      "What was their posture like?",
+      "What did they do with their hands?",
+      "How much space did they take up?",
+      "Did they have any repeated movements?",
+      "What physical detail stood out most?"
+    ],
+    "Voice": [
+      "How fast did they speak?",
+      "Was their voice loud, quiet, or changing?",
+      "Did their pitch change?",
+      "Where did they pause?",
+      "Did they use filler words?",
+      "Did they interrupt or wait?",
+      "What made their voice unique?"
+    ],
+    "Facial Expressions": [
+      "How much eye contact did they make?",
+      "How expressive were their eyebrows?",
+      "How often did they smile?",
+      "Did they seem to hide any emotions?",
+      "How quickly did their expressions change?",
+      "What expression appeared most often?"
+    ],
+    "Emotional Transitions": [
+      "What emotion did they start with?",
+      "What caused the emotional change?",
+      "How quickly did the emotion change?",
+      "How did their body language change?",
+      "How did their voice change?",
+      "What emotion did they end with?"
+    ],
+    "Relationships": [
+      "Who were they interacting with?",
+      "What did the relationship seem to be?",
+      "Who seemed to have more social power?",
+      "How did they treat the other person?",
+      "Did their behavior change during the interaction?",
+      "What did you learn about the relationship?"
+    ],
+    "Objectives": [
+      "What did they seem to want?",
+      "What obstacle was in their way?",
+      "What tactics did they use?",
+      "Did they achieve their objective?",
+      "What changed by the end?"
+    ],
+    "Habits and Quirks": [
+      "What repeated behavior did they have?",
+      "Did they use any repeated phrases?",
+      "Did they touch their face, hair, clothes, or objects?",
+      "Did they show any nervous habits?",
+      "Did they have any unusual gestures?",
+      "What made them memorable?"
+    ],
+    "Group Dynamics": [
+      "How many people were present?",
+      "Who led the conversation?",
+      "Who spoke the least?",
+      "Who interrupted others?",
+      "How did people react to each other?",
+      "What role did each person seem to play?"
+    ]
+  };
 
-  <script>
-    // Auto-fill today's date
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("date").value = today;
+  function loadQuestions() {
+    const category = document.getElementById("category").value;
+    const container = document.getElementById("questions");
+    container.innerHTML = "";
 
-    function exportToNotion() {
-      const interaction = document.getElementById("interaction").value;
-      const date = document.getElementById("date").value;
-      const category = document.getElementById("category").value;
-      const whatObserved = document.getElementById("whatObserved").value;
-      const details = document.getElementById("details").value;
-      const meaning = document.getElementById("meaning").value;
-      const actingUse = document.getElementById("actingUse").value;
+    questionSets[category].forEach((question, index) => {
+      const label = document.createElement("label");
+      label.textContent = question;
 
-      const notionText = `
-# ${interaction || "Untitled Observation"}
+      const textarea = document.createElement("textarea");
+      textarea.id = "q" + index;
+      textarea.placeholder = "Write your observation here...";
 
-**Date:** ${date}  
-**Category:** ${category}
+      container.appendChild(label);
+      container.appendChild(textarea);
+    });
+  }
 
-## What I Observed
-${whatObserved}
+  function exportToNotion() {
+    const interaction = document.getElementById("interaction").value || "Untitled Observation";
+    const date = document.getElementById("date").value;
+    const location = document.getElementById("location").value;
+    const category = document.getElementById("category").value;
+    const takeaway = document.getElementById("takeaway").value;
 
-## Specific Details
-${details}
+    let output = `# ${interaction}\n\n`;
+    output += `**Date:** ${date}\n`;
+    output += `**Location:** ${location}\n`;
+    output += `**Category:** ${category}\n\n`;
 
-## What This Might Reveal
-${meaning}
+    questionSets[category].forEach((question, index) => {
+      const answer = document.getElementById("q" + index).value;
+      output += `## ${question}\n${answer}\n\n`;
+    });
 
-## How I Could Use This in Acting
-${actingUse}
-      `.trim();
+    output += `## Overall Takeaway\n${takeaway}`;
 
-      navigator.clipboard.writeText(notionText).then(() => {
-        document.getElementById("message").textContent =
-          "Copied! You can now paste it into Notion.";
-      });
-    }
-  </script>
+    navigator.clipboard.writeText(output).then(() => {
+      document.getElementById("message").textContent =
+        "Copied! Paste it directly into Notion.";
+    });
+  }
+
+  loadQuestions();
+</script>
 
 </body>
 </html>
