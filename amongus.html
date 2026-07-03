@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Among Us Tracker</title>
+  <style>
+    body { font-family: Arial; background:#111; color:white; padding:20px; }
+    h1 { color:#ffcc00; }
+    input, select, textarea, button {
+      margin:5px 0; padding:8px; width:100%;
+      border-radius:6px; border:none;
+    }
+    .card {
+      background:#222; padding:15px; margin:15px 0;
+      border-radius:10px;
+    }
+    button {
+      background:#ffcc00; cursor:pointer; font-weight:bold;
+    }
+    table {
+      width:100%; border-collapse:collapse; margin-top:15px;
+    }
+    th, td {
+      border:1px solid #555; padding:8px; text-align:left;
+    }
+    th { background:#333; }
+  </style>
+</head>
+<body>
+
+<h1>Among Us Suspicion Tracker</h1>
+
+<div class="card">
+  <h2>Add Player Info</h2>
+
+  <label>Player Color</label>
+  <select id="color">
+    <option>Red</option>
+    <option>Blue</option>
+    <option>Green</option>
+    <option>Pink</option>
+    <option>Orange</option>
+    <option>Yellow</option>
+    <option>Black</option>
+    <option>White</option>
+    <option>Purple</option>
+    <option>Brown</option>
+    <option>Cyan</option>
+    <option>Lime</option>
+  </select>
+
+  <label>Direction They Left</label>
+  <select id="direction">
+    <option>Unknown</option>
+    <option>Left</option>
+    <option>Right</option>
+    <option>Down</option>
+    <option>Up</option>
+  </select>
+
+  <label>Where they claim to be</label>
+  <input id="claim" placeholder="Example: Electrical, MedBay, Cafeteria">
+
+  <label>Where the body/report was found</label>
+  <input id="bodyLocation" placeholder="Example: Storage">
+
+  <label>Backing away?</label>
+  <select id="backingAway">
+    <option>No</option>
+    <option>Yes</option>
+    <option>Maybe</option>
+  </select>
+
+  <label>Moving weirdly?</label>
+  <select id="movingWeird">
+    <option>No</option>
+    <option>Yes</option>
+    <option>Maybe</option>
+  </select>
+
+  <label>Notes</label>
+  <textarea id="notes" placeholder="Example: Ran from body, changed story, no alibi"></textarea>
+
+  <button onclick="addEntry()">Add / Update Player</button>
+</div>
+
+<div class="card">
+  <h2>Tracked Info</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Color</th>
+        <th>Direction</th>
+        <th>Claim</th>
+        <th>Report Location</th>
+        <th>Backing Away</th>
+        <th>Weird Movement</th>
+        <th>Suspicion</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody id="tracker"></tbody>
+  </table>
+</div>
+
+<button onclick="clearTracker()">Clear All</button>
+
+<script>
+let data = JSON.parse(localStorage.getItem("amongUsTracker")) || [];
+
+function calculateSuspicion(entry) {
+  let score = 0;
+
+  if (entry.backingAway === "Yes") score += 2;
+  if (entry.backingAway === "Maybe") score += 1;
+
+  if (entry.movingWeird === "Yes") score += 2;
+  if (entry.movingWeird === "Maybe") score += 1;
+
+  if (entry.direction !== "Unknown") score += 1;
+  if (entry.notes.trim().length > 0) score += 1;
+
+  if (score >= 5) return "Very Sus";
+  if (score >= 3) return "Sus";
+  if (score >= 1) return "Slightly Sus";
+  return "Not Sus";
+}
+
+function addEntry() {
+  const entry = {
+    color: document.getElementById("color").value,
+    direction: document.getElementById("direction").value,
+    claim: document.getElementById("claim").value,
+    bodyLocation: document.getElementById("bodyLocation").value,
+    backingAway: document.getElementById("backingAway").value,
+    movingWeird: document.getElementById("movingWeird").value,
+    notes: document.getElementById("notes").value
+  };
+
+  const existingIndex = data.findIndex(p => p.color === entry.color);
+
+  if (existingIndex >= 0) {
+    data[existingIndex] = entry;
+  } else {
+    data.push(entry);
+  }
+
+  localStorage.setItem("amongUsTracker", JSON.stringify(data));
+  renderTable();
+}
+
+function renderTable() {
+  const tracker = document.getElementById("tracker");
+  tracker.innerHTML = "";
+
+  data.forEach(entry => {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${entry.color}</td>
+      <td>${entry.direction}</td>
+      <td>${entry.claim}</td>
+      <td>${entry.bodyLocation}</td>
+      <td>${entry.backingAway}</td>
+      <td>${entry.movingWeird}</td>
+      <td><b>${calculateSuspicion(entry)}</b></td>
+      <td>${entry.notes}</td>
+    `;
+
+    tracker.appendChild(row);
+  });
+}
+
+function clearTracker() {
+  data = [];
+  localStorage.removeItem("amongUsTracker");
+  renderTable();
+}
+
+renderTable();
+</script>
+
+</body>
+</html>
