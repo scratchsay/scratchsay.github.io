@@ -3,389 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OpenFace Face Animation Viewer</title>
+  <title>OpenFace All-AU Face Viewer</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 20px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    #viewer {
-      background: #000;
-      border: 1px solid #444;
-      border-radius: 10px;
-      width: min(95vw, 900px);
-      height: min(65vh, 650px);
-    }
-
-    .panel {
-      width: min(95vw, 900px);
-      background: #1d1d1d;
-      border: 1px solid #333;
-      border-radius: 10px;
-      padding: 12px;
-      box-sizing: border-box;
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    button, input, select {
-      font-size: 15px;
-      padding: 8px 10px;
-      border-radius: 7px;
-      border: 1px solid #555;
-    }
-
-    button {
-      background: #2d2d2d;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #3a3a3a;
-    }
-
-    input[type="range"] {
-      flex: 1;
-      min-width: 220px;
-    }
-
-    .stats {
-      margin-top: 8px;
-      font-size: 14px;
-      color: #ccc;
-    }
-  </style>
+    body{margin:0;font-family:Arial,sans-serif;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px} h1{margin:0;font-size:24px} .panel{width:min(95vw,980px);background:#1d1d1d;border:1px solid #333;border-radius:10px;padding:12px;box-sizing:border-box}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}button,input,select{font-size:15px;padding:8px 10px;border-radius:7px;border:1px solid #555}button{background:#2d2d2d;color:white;cursor:pointer}button:hover{background:#3a3a3a}input[type=range]{flex:1;min-width:220px}#viewer{background:#f7f7f7;border:1px solid #444;border-radius:10px;width:min(95vw,980px);height:min(70vh,720px)}.stats{margin-top:8px;font-size:14px;color:#ccc}.hint{font-size:13px;color:#aaa;margin-top:6px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:6px;margin-top:10px}.auCell{background:#2a2a2a;border:1px solid #3c3c3c;border-radius:8px;padding:6px;font-size:12px}.bar{height:6px;background:#555;border-radius:4px;overflow:hidden;margin-top:4px}.fill{height:100%;background:#ddd;width:0%}</style>
 </head>
 <body>
-  <h1>OpenFace Face Animation Viewer</h1>
-
+  <h1>OpenFace All-AU Face Viewer</h1>
+  <div class="panel"><input id="fileInput" type="file" accept=".csv,.xlsx,.xls" /> <span id="status">Load an OpenFace CSV/XLSX file with AU columns.</span><div class="hint">Supports AU##_r intensity columns and AU##_c presence columns, plus landmark columns when available.</div></div>
+  <canvas id="viewer" width="980" height="720"></canvas>
   <div class="panel">
-    <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" />
-    <span id="status">Load an OpenFace CSV or Excel file.</span>
+    <div class="controls"><button id="back10">⏪ 10</button><button id="back1">◀ 1</button><button id="playPause">▶ Play</button><button id="forward1">1 ▶</button><button id="forward10">10 ⏩</button><label>FPS:<input id="fps" type="number" min="1" max="120" value="30" style="width:70px" /></label><label>Labels:<select id="labelMode"><option value="all">Show all AUs</option><option value="active">Active only</option><option value="none">None</option></select></label></div>
+    <div class="controls" style="margin-top:10px"><input id="timeline" type="range" min="0" max="0" value="0" /></div>
+    <div class="stats" id="stats">Frame: 0 / 0</div><div class="grid" id="auGrid"></div>
   </div>
-
-  <canvas id="viewer" width="900" height="650"></canvas>
-
-  <div class="panel">
-    <div class="controls">
-      <button id="back10">⏪ 10</button>
-      <button id="back1">◀ 1</button>
-      <button id="playPause">▶ Play</button>
-      <button id="forward1">1 ▶</button>
-      <button id="forward10">10 ⏩</button>
-
-      <label>
-        FPS:
-        <input id="fps" type="number" min="1" max="120" value="30" style="width:70px" />
-      </label>
-
-      <label>
-        Points:
-        <select id="pointMode">
-          <option value="lines">Lines + points</option>
-          <option value="points">Points only</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="controls" style="margin-top:10px;">
-      <input id="timeline" type="range" min="0" max="0" value="0" />
-    </div>
-
-    <div class="stats" id="stats">Frame: 0 / 0</div>
-  </div>
-
-  <script>
-    const canvas = document.getElementById("viewer");
-    const ctx = canvas.getContext("2d");
-
-    const fileInput = document.getElementById("fileInput");
-    const statusEl = document.getElementById("status");
-    const statsEl = document.getElementById("stats");
-    const timeline = document.getElementById("timeline");
-    const playPause = document.getElementById("playPause");
-    const fpsInput = document.getElementById("fps");
-    const pointMode = document.getElementById("pointMode");
-
-    let rows = [];
-    let currentFrame = 0;
-    let playing = false;
-    let lastStepTime = 0;
-
-    // OpenFace 68-point landmark connections.
-    const connections = [
-      range(0, 16),    // jaw
-      range(17, 21),   // left eyebrow
-      range(22, 26),   // right eyebrow
-      range(27, 30),   // nose bridge
-      range(31, 35),   // lower nose
-      closedRange(36, 41), // left eye
-      closedRange(42, 47), // right eye
-      closedRange(48, 59), // outer mouth
-      closedRange(60, 67)  // inner mouth
-    ].flat();
-
-    function range(a, b) {
-      const out = [];
-      for (let i = a; i < b; i++) out.push([i, i + 1]);
-      return out;
-    }
-
-    function closedRange(a, b) {
-      const out = range(a, b);
-      out.push([b, a]);
-      return out;
-    }
-
-    function cleanKeys(row) {
-      const cleaned = {};
-      for (const key in row) cleaned[key.trim()] = row[key];
-      return cleaned;
-    }
-
-    function parseCSV(text) {
-      // Handles normal CSV exported by OpenFace, including quoted values.
-      const lines = text.replace(/\r/g, "").split("\n").filter(line => line.trim());
-      const headers = splitCSVLine(lines[0]).map(h => h.trim());
-      return lines.slice(1).map(line => {
-        const values = splitCSVLine(line);
-        const row = {};
-        headers.forEach((h, i) => row[h] = values[i] ?? "");
-        return row;
-      });
-    }
-
-    function splitCSVLine(line) {
-      const result = [];
-      let current = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        const next = line[i + 1];
-
-        if (char === '"' && inQuotes && next === '"') {
-          current += '"';
-          i++;
-        } else if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === "," && !inQuotes) {
-          result.push(current.trim());
-          current = "";
-        } else {
-          current += char;
-        }
-      }
-
-      result.push(current.trim());
-      return result;
-    }
-
-    fileInput.addEventListener("change", async event => {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      statusEl.textContent = "Loading file...";
-
-      const name = file.name.toLowerCase();
-
-      try {
-        if (name.endsWith(".csv")) {
-          const text = await file.text();
-          rows = parseCSV(text).map(cleanKeys);
-        } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-          const buffer = await file.arrayBuffer();
-          const workbook = XLSX.read(buffer, { type: "array" });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" }).map(cleanKeys);
-        } else {
-          throw new Error("Unsupported file type. Use CSV, XLSX, or XLS.");
-        }
-
-        rows = rows.filter(row => hasLandmarks(row));
-
-        if (!rows.length) {
-          throw new Error("No usable OpenFace x_0/y_0 or X_0/Y_0 landmark columns found.");
-        }
-
-        currentFrame = 0;
-        timeline.max = rows.length - 1;
-        timeline.value = 0;
-        statusEl.textContent = `Loaded ${rows.length} frames.`;
-        drawFrame();
-      } catch (err) {
-        rows = [];
-        statusEl.textContent = "Error: " + err.message;
-        clearCanvas();
-      }
-    });
-
-    function hasLandmarks(row) {
-      return ("x_0" in row && "y_0" in row) || ("X_0" in row && "Y_0" in row);
-    }
-
-    function getPoint(row, i) {
-      // Prefer OpenFace 2D image coordinates x_i/y_i.
-      // If those are all zero or missing, fall back to 3D model X_i/Y_i projected as 2D.
-      let x = Number(row[`x_${i}`]);
-      let y = Number(row[`y_${i}`]);
-
-      if (!Number.isFinite(x) || !Number.isFinite(y) || (x === 0 && y === 0)) {
-        x = Number(row[`X_${i}`]);
-        y = Number(row[`Y_${i}`]);
-      }
-
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-      return { x, y };
-    }
-
-    function getAllPoints(row) {
-      const pts = [];
-      for (let i = 0; i < 68; i++) pts.push(getPoint(row, i));
-      return pts;
-    }
-
-    function normalizePoints(points) {
-      const valid = points.filter(Boolean);
-      const minX = Math.min(...valid.map(p => p.x));
-      const maxX = Math.max(...valid.map(p => p.x));
-      const minY = Math.min(...valid.map(p => p.y));
-      const maxY = Math.max(...valid.map(p => p.y));
-
-      const width = Math.max(maxX - minX, 1);
-      const height = Math.max(maxY - minY, 1);
-      const pad = 60;
-      const scale = Math.min(
-        (canvas.width - pad * 2) / width,
-        (canvas.height - pad * 2) / height
-      );
-
-      return points.map(p => {
-        if (!p) return null;
-        return {
-          x: (p.x - minX) * scale + pad + (canvas.width - width * scale - pad * 2) / 2,
-          y: (p.y - minY) * scale + pad + (canvas.height - height * scale - pad * 2) / 2
-        };
-      });
-    }
-
-    function drawFrame() {
-      if (!rows.length) return clearCanvas();
-
-      const row = rows[currentFrame];
-      const points = normalizePoints(getAllPoints(row));
-
-      clearCanvas();
-
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "#00e5ff";
-      ctx.fillStyle = "#ffffff";
-
-      if (pointMode.value === "lines") {
-        for (const [a, b] of connections) {
-          const p1 = points[a];
-          const p2 = points[b];
-          if (!p1 || !p2) continue;
-
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.stroke();
-        }
-      }
-
-      for (const p of points) {
-        if (!p) continue;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      timeline.value = currentFrame;
-
-      const frameNumber = row.frame ?? currentFrame + 1;
-      const timestamp = row.timestamp ? ` | Time: ${Number(row.timestamp).toFixed(3)}s` : "";
-      const confidence = row.confidence ? ` | Confidence: ${Number(row.confidence).toFixed(2)}` : "";
-
-      statsEl.textContent = `Frame: ${currentFrame + 1} / ${rows.length} | OpenFace frame: ${frameNumber}${timestamp}${confidence}`;
-    }
-
-    function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function setFrame(index) {
-      if (!rows.length) return;
-      currentFrame = Math.max(0, Math.min(rows.length - 1, index));
-      drawFrame();
-    }
-
-    function togglePlay() {
-      if (!rows.length) return;
-      playing = !playing;
-      playPause.textContent = playing ? "⏸ Pause" : "▶ Play";
-      lastStepTime = performance.now();
-      requestAnimationFrame(animationLoop);
-    }
-
-    function animationLoop(now) {
-      if (!playing) return;
-
-      const fps = Math.max(1, Math.min(120, Number(fpsInput.value) || 30));
-      const interval = 1000 / fps;
-
-      if (now - lastStepTime >= interval) {
-        currentFrame++;
-        if (currentFrame >= rows.length) currentFrame = 0;
-        drawFrame();
-        lastStepTime = now;
-      }
-
-      requestAnimationFrame(animationLoop);
-    }
-
-    playPause.addEventListener("click", togglePlay);
-    document.getElementById("back1").addEventListener("click", () => setFrame(currentFrame - 1));
-    document.getElementById("forward1").addEventListener("click", () => setFrame(currentFrame + 1));
-    document.getElementById("back10").addEventListener("click", () => setFrame(currentFrame - 10));
-    document.getElementById("forward10").addEventListener("click", () => setFrame(currentFrame + 10));
-    timeline.addEventListener("input", () => setFrame(Number(timeline.value)));
-    pointMode.addEventListener("change", drawFrame);
-
-    document.addEventListener("keydown", event => {
-      if (event.code === "Space") {
-        event.preventDefault();
-        togglePlay();
-      } else if (event.code === "ArrowLeft") {
-        setFrame(currentFrame - 1);
-      } else if (event.code === "ArrowRight") {
-        setFrame(currentFrame + 1);
-      }
-    });
-
-    clearCanvas();
-  </script>
+<script>
+const canvas=document.getElementById('viewer'),ctx=canvas.getContext('2d');
+const fileInput=document.getElementById('fileInput'),statusEl=document.getElementById('status'),statsEl=document.getElementById('stats'),timeline=document.getElementById('timeline'),playPause=document.getElementById('playPause'),fpsInput=document.getElementById('fps'),labelMode=document.getElementById('labelMode'),auGrid=document.getElementById('auGrid');
+let rows=[],currentFrame=0,playing=false,lastStepTime=0;
+const AUs=[
+ ['AU01','Inner Brow Raiser','brow'],['AU02','Outer Brow Raiser','brow'],['AU04','Brow Lowerer','brow'],['AU05','Upper Lid Raiser','eye'],['AU06','Cheek Raiser','cheek'],['AU07','Lid Tightener','eye'],['AU09','Nose Wrinkler','nose'],['AU10','Upper Lip Raiser','mouth'],['AU12','Lip Corner Puller','mouth'],['AU14','Dimpler','mouth'],['AU15','Lip Corner Depressor','mouth'],['AU17','Chin Raiser','chin'],['AU20','Lip Stretcher','mouth'],['AU23','Lip Tightener','mouth'],['AU25','Lips Part','mouth'],['AU26','Jaw Drop','jaw'],['AU28','Lip Suck','mouth'],['AU45','Blink','eye']
+];
+function cleanKeys(row){const o={};for(const k in row)o[k.trim()]=row[k];return o}
+function splitCSVLine(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i],n=line[i+1];if(ch==='"'&&q&&n==='"'){c+='"';i++}else if(ch==='"')q=!q;else if(ch===','&&!q){r.push(c.trim());c=''}else c+=ch}r.push(c.trim());return r}
+function parseCSV(text){const lines=text.replace(/\r/g,'').split('\n').filter(l=>l.trim());const h=splitCSVLine(lines[0]).map(x=>x.trim());return lines.slice(1).map(line=>{const v=splitCSVLine(line),row={};h.forEach((x,i)=>row[x]=v[i]??'');return row})}
+fileInput.addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;statusEl.textContent='Loading file...';try{const n=file.name.toLowerCase();if(n.endsWith('.csv'))rows=parseCSV(await file.text()).map(cleanKeys);else if(n.endsWith('.xlsx')||n.endsWith('.xls')){const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}).map(cleanKeys)}else throw new Error('Use CSV, XLSX, or XLS.');if(!rows.length)throw new Error('No rows found.');currentFrame=0;timeline.max=rows.length-1;timeline.value=0;statusEl.textContent=`Loaded ${rows.length} frames.`;drawFrame()}catch(err){rows=[];statusEl.textContent='Error: '+err.message;clearCanvas()}});
+function auVal(row,code){const r=Number(row[`${code}_r`]??row[`${code.toLowerCase()}_r`]??0);const c=Number(row[`${code}_c`]??row[`${code.toLowerCase()}_c`]??0);return Math.max(Number.isFinite(r)?r/5:0, Number.isFinite(c)?c:0)}
+function clearCanvas(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#f7f7f7';ctx.fillRect(0,0,canvas.width,canvas.height)}
+function facePath(cx,cy,w,h){ctx.beginPath();ctx.ellipse(cx,cy,w/2,h/2,0,0,Math.PI*2)}
+function drawLabel(text,x,y,v){ctx.save();ctx.font='13px Arial';ctx.fillStyle=v>0.05?'#111':'#777';ctx.globalAlpha=v>0.05?1:.6;ctx.fillText(text,x,y);ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(x,y+4,68,5);ctx.fillStyle=`rgba(0,0,0,${Math.min(1,.25+v*.75)})`;ctx.fillRect(x,y+4,68*v,5);ctx.restore()}
+function drawFrame(){if(!rows.length)return clearCanvas();const row=rows[currentFrame];const v={};AUs.forEach(a=>v[a[0]]=auVal(row,a[0]));clearCanvas();const cx=490,cy=350,fw=360,fh=500;
+ // face
+ facePath(cx,cy,fw,fh);ctx.fillStyle='#ffd3b0';ctx.fill();ctx.strokeStyle='#dca67d';ctx.stroke();
+ // ears and cheeks
+ ctx.fillStyle='#ffc79c';ctx.beginPath();ctx.ellipse(cx-fw/2-18,cy,30,55,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx+fw/2+18,cy,30,55,0,0,Math.PI*2);ctx.fill();
+ const cheek=v.AU06,smile=v.AU12,blink=v.AU45,lid=v.AU07,eyeOpen=Math.max(.12,1-v.AU45*.9-v.AU07*.45+v.AU05*.35);ctx.globalAlpha=.55+cheek*.35;ctx.fillStyle='#ff9f9f';ctx.beginPath();ctx.ellipse(cx-95,cy+45,45,25,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx+95,cy+45,45,25,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ // brows
+ ctx.lineCap='round';ctx.lineWidth=11;ctx.strokeStyle='#663514';function brow(side){const sx=side<0?cx-82:cx+82, lift=(v.AU01+v.AU02)*28-v.AU04*26, inner=v.AU01*22-v.AU04*18, outer=v.AU02*24-v.AU04*12;ctx.beginPath();ctx.moveTo(sx-45*side,cy-130-inner);ctx.quadraticCurveTo(sx,cy-145-lift,sx+45*side,cy-130-outer);ctx.stroke()}brow(-1);brow(1);
+ // forehead AU01/02/04 stress lines
+ ctx.lineWidth=1;ctx.strokeStyle='rgba(120,70,35,.45)';for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(cx-80,cy-180+i*12-(v.AU01+v.AU02)*8);ctx.quadraticCurveTo(cx,cy-190+i*10,cx+80,cy-180+i*12-(v.AU01+v.AU02)*8);ctx.stroke()}
+ // eyes
+ function eye(side){const ex=cx+side*78,ey=cy-70,ew=78,eh=32*eyeOpen;ctx.fillStyle='white';ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(ex,ey,ew/2,eh,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#7b4b25';ctx.beginPath();ctx.arc(ex,ey,11,0,Math.PI*2);ctx.fill();ctx.fillStyle='#111';ctx.beginPath();ctx.arc(ex,ey,5,0,Math.PI*2);ctx.fill();if(blink>.65){ctx.strokeStyle='#111';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(ex-ew/2,ey);ctx.lineTo(ex+ew/2,ey);ctx.stroke()}}eye(-1);eye(1);
+ // nose AU09/AU10
+ ctx.strokeStyle='#d4946e';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,cy-45);ctx.quadraticCurveTo(cx-20,cy+15,cx-10,cy+35);ctx.stroke();ctx.beginPath();ctx.arc(cx-22,cy+38,10+v.AU09*8,0,Math.PI);ctx.stroke();ctx.beginPath();ctx.arc(cx+22,cy+38,10+v.AU09*8,0,Math.PI);ctx.stroke();if(v.AU09>.05){ctx.lineWidth=1;for(let s of[-1,1]){ctx.beginPath();ctx.moveTo(cx+s*28,cy+12);ctx.lineTo(cx+s*55,cy+22);ctx.stroke()}}
+ // mouth uses AU10/12/14/15/17/20/23/25/26/28
+ const mouthW=95+v.AU12*70+v.AU20*60-v.AU23*45-v.AU28*35;const mouthH=18+v.AU25*35+v.AU26*75-v.AU23*10-v.AU28*14;const my=cy+125-v.AU10*18-v.AU17*22;const cornerUp=v.AU12*32-v.AU15*38;ctx.fillStyle='#4a0711';ctx.strokeStyle='#7b1a22';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(cx-mouthW/2,my-cornerUp);ctx.quadraticCurveTo(cx,my+mouthH,cx+mouthW/2,my-cornerUp);ctx.quadraticCurveTo(cx,my-mouthH*.65-v.AU10*22,cx-mouthW/2,my-cornerUp);ctx.fill();ctx.stroke();ctx.fillStyle='#e15469';ctx.beginPath();ctx.ellipse(cx,my+mouthH*.55,Math.max(20,mouthW*.28),Math.max(6,mouthH*.22),0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(cx-mouthW*.35,my-mouthH*.35);ctx.lineTo(cx+mouthW*.35,my-mouthH*.35);ctx.stroke();if(v.AU14>.05){ctx.strokeStyle='#bd7b59';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx-mouthW/2-10,my-5,18,Math.PI*1.5,Math.PI*.2);ctx.stroke();ctx.beginPath();ctx.arc(cx+mouthW/2+10,my-5,18,Math.PI*.8,Math.PI*1.5);ctx.stroke()}
+ // chin/jaw
+ ctx.strokeStyle=`rgba(120,70,35,${.25+v.AU17*.55})`;ctx.lineWidth=2+v.AU17*3;ctx.beginPath();ctx.arc(cx,cy+185-v.AU17*20,55,0.2*Math.PI,0.8*Math.PI);ctx.stroke();if(v.AU26>.05){ctx.strokeStyle='rgba(120,70,35,.5)';ctx.beginPath();ctx.arc(cx,cy+225,120,0.25*Math.PI,0.75*Math.PI);ctx.stroke()}
+ // AU labels around face so every AU can be displayed even when subtle
+ if(labelMode.value!=='none'){AUs.forEach((a,i)=>{if(labelMode.value==='active'&&v[a[0]]<=.05)return;const left=i<9,x=left?35:canvas.width-220,y=90+(i%9)*62;drawLabel(`${a[0]} ${a[1]}`,x,y,v[a[0]])})}
+ updateGrid(v,row)}
+function updateGrid(v,row){auGrid.innerHTML=AUs.map(a=>`<div class="auCell"><b>${a[0]}</b> ${a[1]}<div class="bar"><div class="fill" style="width:${Math.round(v[a[0]]*100)}%"></div></div>${(v[a[0]]*5).toFixed(2)}</div>`).join('');const frameNumber=row.frame??currentFrame+1;const timestamp=row.timestamp?` | Time: ${Number(row.timestamp).toFixed(3)}s`:'';const confidence=row.confidence?` | Confidence: ${Number(row.confidence).toFixed(2)}`:'';statsEl.textContent=`Frame: ${currentFrame+1} / ${rows.length} | OpenFace frame: ${frameNumber}${timestamp}${confidence}`;timeline.value=currentFrame}
+function setFrame(i){if(!rows.length)return;currentFrame=Math.max(0,Math.min(rows.length-1,i));drawFrame()}function togglePlay(){if(!rows.length)return;playing=!playing;playPause.textContent=playing?'⏸ Pause':'▶ Play';lastStepTime=performance.now();requestAnimationFrame(loop)}function loop(now){if(!playing)return;const fps=Math.max(1,Math.min(120,Number(fpsInput.value)||30));if(now-lastStepTime>=1000/fps){currentFrame=(currentFrame+1)%rows.length;drawFrame();lastStepTime=now}requestAnimationFrame(loop)}
+playPause.onclick=togglePlay;document.getElementById('back1').onclick=()=>setFrame(currentFrame-1);document.getElementById('forward1').onclick=()=>setFrame(currentFrame+1);document.getElementById('back10').onclick=()=>setFrame(currentFrame-10);document.getElementById('forward10').onclick=()=>setFrame(currentFrame+10);timeline.oninput=()=>setFrame(Number(timeline.value));labelMode.onchange=drawFrame;document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();togglePlay()}else if(e.code==='ArrowLeft')setFrame(currentFrame-1);else if(e.code==='ArrowRight')setFrame(currentFrame+1)});clearCanvas();
+</script>
 </body>
 </html>
