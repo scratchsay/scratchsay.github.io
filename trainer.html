@@ -1,100 +1,176 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>FACS Generator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 30px;
-      background: #f4f4f4;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FACS Practice Generator</title>
 
-    .card {
-      background: white;
-      padding: 18px;
-      margin: 12px 0;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-      font-size: 18px;
-    }
+<style>
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f4f4;
+    margin:30px;
+}
 
-    button {
-      margin-top: 20px;
-      padding: 12px 20px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: #222;
-      color: white;
-    }
+h1{
+    text-align:center;
+}
 
-    button:hover {
-      background: #444;
-    }
-  </style>
+#faces{
+    max-width:900px;
+    margin:auto;
+}
+
+.card{
+    background:#fff;
+    padding:18px;
+    margin:12px 0;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+    font-size:18px;
+    cursor:pointer;
+    transition:.25s;
+    user-select:none;
+}
+
+.card:hover{
+    transform:scale(1.02);
+}
+
+.card.done{
+    background:#d8d8d8;
+    color:#666;
+    text-decoration:line-through;
+}
+
+button{
+    display:block;
+    margin:30px auto;
+    padding:14px 28px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    background:#222;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#444;
+}
+</style>
 </head>
+
 <body>
 
-  <h1>FACS Face Generator</h1>
+<h1>FACS Practice Generator</h1>
+<p style="text-align:center;">
+Tap a face to begin a 3-second countdown. When finished it will gray out.
+</p>
 
-  <div id="faces"></div>
+<div id="faces"></div>
 
-  <button onclick="generateFaces()">Generate New</button>
+<button onclick="generateFaces()">Generate New</button>
 
-  <script>
-    const facsExpressions = [
-      "AU6 (cheek raiser) + AU12 (smile puller)",
-      "AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor) + AU17 (chin raiser)",
-      "AU4 (brow lower) + AU5 (upper eyelid raise) + AU7 (eyelid tightener) + AU23 (lip tightener)",
-      "AU1 (inner brow raise) + AU2 (outer brow raise) + AU4 (brow lower) + AU5 (upper eyelid raise) + AU20 (lip stretcher) + AU25 (lips part)",
-      "AU1 (inner brow raise) + AU2 (outer brow raise) + AU5 (upper eyelid raise) + AU26 (jaw drop)",
+<script>
 
-      "AU9 (nose wrinkler) + AU10 (upper lip raiser)",
-      "AU14 (dimpler)",
-      "AU2 (outer brow raise) + AU5 (upper eyelid raise)",
-      "AU1 (inner brow raise) + AU15 (lip corner depressor) + AU24 (lip presser)",
-      "AU12 (smile puller) + AU15 (lip corner depressor) + AU24 (lip presser)",
+const facsExpressions = [
 
-      "AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor)",
-      "AU6 (cheek raiser) + AU12 (smile puller) + AU25 (lips part)",
-      "AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor)",
-      "AU6 (cheek raiser) + AU12 (smile puller) + AU43 (eye closure)",
-      "AU2 (outer brow raise) + AU5 (upper eyelid raise) + AU12 (smile puller)",
+"AU6 (cheek raiser) + AU12 (smile puller)",
+"AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor) + AU17 (chin raiser)",
+"AU4 (brow lower) + AU5 (upper eyelid raise) + AU7 (eyelid tightener) + AU23 (lip tightener)",
+"AU1 (inner brow raise) + AU2 (outer brow raise) + AU4 (brow lower) + AU5 (upper eyelid raise) + AU20 (lip stretcher) + AU25 (lips part)",
+"AU1 (inner brow raise) + AU2 (outer brow raise) + AU5 (upper eyelid raise) + AU26 (jaw drop)",
 
-      "AU6 (cheek raiser) + AU12 (smile puller) + AU17 (chin raiser)",
-      "AU4 (brow lower) + AU2 (outer brow raise)",
-      "AU4 (brow lower) + AU7 (eyelid tightener)",
-      "AU4 (brow lower) + AU14 (dimpler)",
-      "AU4 (brow lower) + AU7 (eyelid tightener) + AU23 (lip tightener)",
+"AU9 (nose wrinkler) + AU10 (upper lip raiser)",
+"AU14 (dimpler)",
+"AU2 (outer brow raise) + AU5 (upper eyelid raise)",
+"AU1 (inner brow raise) + AU15 (lip corner depressor) + AU24 (lip presser)",
+"AU12 (smile puller) + AU15 (lip corner depressor) + AU24 (lip presser)",
 
-      "AU4 (brow lower) + AU7 (eyelid tightener) + AU23 (lip tightener) + AU24 (lip presser)",
-      "AU4 (brow lower) + AU7 (eyelid tightener) + AU24 (lip presser)",
-      "AU1 (inner brow raise) + AU2 (outer brow raise) + AU20 (lip stretcher) + AU25 (lips part)",
-      "AU1 (inner brow raise) + AU20 (lip stretcher) + AU24 (lip presser)",
-      "AU4 (brow lower) + AU6 (cheek raiser) + AU7 (eyelid tightener) + AU9 (nose wrinkler) + AU10 (upper lip raiser) + AU43 (eye closure)",
+"AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor)",
+"AU6 (cheek raiser) + AU12 (smile puller) + AU25 (lips part)",
+"AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor)",
+"AU6 (cheek raiser) + AU12 (smile puller) + AU43 (eye closure)",
+"AU2 (outer brow raise) + AU5 (upper eyelid raise) + AU12 (smile puller)",
 
-      "AU18 (lip pucker) + AU22 (lip funneler)",
-      "AU24 (lip presser) + AU28 (lip suck)"
-    ];
+"AU6 (cheek raiser) + AU12 (smile puller) + AU17 (chin raiser)",
+"AU4 (brow lower) + AU2 (outer brow raise)",
+"AU4 (brow lower) + AU7 (eyelid tightener)",
+"AU4 (brow lower) + AU14 (dimpler)",
+"AU4 (brow lower) + AU7 (eyelid tightener) + AU23 (lip tightener)",
 
-    function generateFaces() {
-      const container = document.getElementById("faces");
-      container.innerHTML = "";
+"AU4 (brow lower) + AU7 (eyelid tightener) + AU23 (lip tightener) + AU24 (lip presser)",
+"AU4 (brow lower) + AU7 (eyelid tightener) + AU24 (lip presser)",
+"AU1 (inner brow raise) + AU2 (outer brow raise) + AU20 (lip stretcher) + AU25 (lips part)",
+"AU1 (inner brow raise) + AU20 (lip stretcher) + AU24 (lip presser)",
+"AU4 (brow lower) + AU6 (cheek raiser) + AU7 (eyelid tightener) + AU9 (nose wrinkler) + AU10 (upper lip raiser) + AU43 (eye closure)",
 
-      const shuffled = [...facsExpressions].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, 5);
+"AU18 (lip pucker) + AU22 (lip funneler)",
+"AU24 (lip presser) + AU28 (lip suck)"
 
-      selected.forEach((face, index) => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.textContent = `Face ${index + 1}: ${face}`;
-        container.appendChild(div);
-      });
+];
+
+function shuffle(array){
+    for(let i=array.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
     }
+}
 
-    generateFaces();
-  </script>
+function generateFaces(){
+
+    const container=document.getElementById("faces");
+    container.innerHTML="";
+
+    const list=[...facsExpressions];
+    shuffle(list);
+
+    const selected=list.slice(0,5);
+
+    selected.forEach((face,index)=>{
+
+        const card=document.createElement("div");
+        card.className="card";
+        card.textContent=`Face ${index+1}: ${face}`;
+
+        card.addEventListener("click",function(){
+
+            if(card.classList.contains("done")) return;
+            if(card.dataset.running==="true") return;
+
+            card.dataset.running="true";
+
+            let seconds=3;
+
+            const timer=setInterval(()=>{
+
+                card.textContent=`Face ${index+1}: ${face} (${seconds})`;
+
+                seconds--;
+
+                if(seconds<0){
+
+                    clearInterval(timer);
+
+                    card.textContent=`Face ${index+1}: ${face}`;
+                    card.classList.add("done");
+
+                }
+
+            },1000);
+
+        });
+
+        container.appendChild(card);
+
+    });
+
+}
+
+generateFaces();
+
+</script>
 
 </body>
 </html>
