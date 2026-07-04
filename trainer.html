@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FACS Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #f4f4f4;
+    }
+
+    .card {
+      background: white;
+      padding: 18px;
+      margin: 12px 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      font-size: 18px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #222;
+      color: white;
+    }
+
+    button:hover {
+      background: #444;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>FACS Face Generator</h1>
+
+  <div id="faces"></div>
+
+  <button onclick="generateFaces()">Generate New</button>
+
+  <script>
+    const facsExpressions = [
+      "AU6 (cheek raiser) + AU12 (smile puller)",
+      "AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor) + AU17 (chin raiser)",
+      "AU4 (brow lower) + AU5 (upper eyelid raise) + AU7 (eyelid tightener) + AU23 (lip tightener)",
+      "AU1 (inner brow raise) + AU2 (outer brow raise) + AU4 (brow lower) + AU5 (upper eyelid raise) + AU20 (lip stretcher) + AU25 (lips part)",
+      "AU1 (inner brow raise) + AU2 (outer brow raise) + AU5 (upper eyelid raise) + AU26 (jaw drop)",
+
+      "AU9 (nose wrinkler) + AU10 (upper lip raiser)",
+      "AU14 (dimpler)",
+      "AU2 (outer brow raise) + AU5 (upper eyelid raise)",
+      "AU1 (inner brow raise) + AU15 (lip corner depressor) + AU24 (lip presser)",
+      "AU12 (smile puller) + AU15 (lip corner depressor) + AU24 (lip presser)",
+
+      "AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor)",
+      "AU6 (cheek raiser) + AU12 (smile puller) + AU25 (lips part)",
+      "AU1 (inner brow raise) + AU4 (brow lower) + AU15 (lip corner depressor)",
+      "AU6 (cheek raiser) + AU12 (smile puller) + AU43 (eye closure)",
+      "AU2 (outer brow raise) + AU5 (upper eyelid raise) + AU12 (smile puller)",
+
+      "AU6 (cheek raiser) + AU12 (smile puller) + AU17 (chin raiser)",
+      "AU4 (brow lower) + AU2 (outer brow raise)",
+      "AU4 (brow lower) + AU7 (eyelid tightener)",
+      "AU4 (brow lower) + AU14 (dimpler)",
+      "AU4 (brow lower) + AU7 (eyelid tightener) + AU23 (lip tightener)",
+
+      "AU4 (brow lower) + AU7 (eyelid tightener) + AU23 (lip tightener) + AU24 (lip presser)",
+      "AU4 (brow lower) + AU7 (eyelid tightener) + AU24 (lip presser)",
+      "AU1 (inner brow raise) + AU2 (outer brow raise) + AU20 (lip stretcher) + AU25 (lips part)",
+      "AU1 (inner brow raise) + AU20 (lip stretcher) + AU24 (lip presser)",
+      "AU4 (brow lower) + AU6 (cheek raiser) + AU7 (eyelid tightener) + AU9 (nose wrinkler) + AU10 (upper lip raiser) + AU43 (eye closure)",
+
+      "AU18 (lip pucker) + AU22 (lip funneler)",
+      "AU24 (lip presser) + AU28 (lip suck)"
+    ];
+
+    function generateFaces() {
+      const container = document.getElementById("faces");
+      container.innerHTML = "";
+
+      const shuffled = [...facsExpressions].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, 5);
+
+      selected.forEach((face, index) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.textContent = `Face ${index + 1}: ${face}`;
+        container.appendChild(div);
+      });
+    }
+
+    generateFaces();
+  </script>
+
+</body>
+</html>
