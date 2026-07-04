@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenFace 2D FACS Face Animator</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #161616;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 20px;
+    }
+    h1 { margin: 0; font-size: 24px; }
+    #viewer {
+      background: #f0f0f0;
+      border: 1px solid #444;
+      border-radius: 14px;
+      width: min(95vw, 900px);
+      height: min(65vh, 650px);
+    }
+    .panel {
+      width: min(95vw, 900px);
+      background: #222;
+      border: 1px solid #3a3a3a;
+      border-radius: 12px;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button, input, select {
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: #303030;
+      color: white;
+      padding: 7px 10px;
+    }
+    input[type="range"] { width: 100%; padding: 0; }
+    .stats { margin-top: 10px; font-size: 14px; color: #ddd; line-height: 1.5; }
+    .hint { color: #bbb; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>OpenFace 2D FACS Face Animator</h1>
+
+  <div class="panel">
+    <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" />
+    <span id="status">Load an OpenFace CSV or Excel file with 2D x_0/y_0 landmarks.</span>
+    <div class="hint">Uses only OpenFace 2D landmarks. Eyebrow raise, eye openness, mouth opening, smile/frown, and jaw motion are translated onto a simple cartoon FACS-style face.</div>
+  </div>
+
+  <canvas id="viewer" width="900" height="650"></canvas>
+
+  <div class="panel">
+    <div class="controls">
+      <button id="back10">⏪ 10</button>
+      <button id="back1">◀ 1</button>
+      <button id="playPause">▶ Play</button>
+      <button id="forward1">1 ▶</button>
+      <button id="forward10">10 ⏩</button>
+      <label>FPS: <input id="fps" type="number" min="1" max="120" value="30" style="width:70px" /></label>
+      <label>Motion: <input id="gain" type="range" min="0.5" max="3" step="0.1" value="1.6" style="width:150px" /></label>
+      <label><input id="showGuides" type="checkbox" /> Show tiny landmark guide</label>
+    </div>
+    <div class="controls" style="margin-top:10px;"><input id="timeline" type="range" min="0" max="0" value="0" /></div>
+    <div class="stats" id="stats">Frame: 0 / 0</div>
+  </div>
+
+<script>
+const canvas = document.getElementById("viewer");
+const ctx = canvas.getContext("2d");
+const fileInput = document.getElementById("fileInput");
+const statusEl = document.getElementById("status");
+const statsEl = document.getElementById("stats");
+const timeline = document.getElementById("timeline");
+const playPause = document.getElementById("playPause");
+const fpsInput = document.getElementById("fps");
+const gainInput = document.getElementById("gain");
+const showGuides = document.getElementById("showGuides");
+
+let rows = [];
+let currentFrame = 0;
+let playing = false;
+let lastStepTime = 0;
+let baseline = null;
+
+function cleanKeys(row) {
+  const cleaned = {};
+  for (const key in row) cleaned[key.trim()] = row[key];
+  return cleaned;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i], next = line[i + 1];
+    if (char === '"' && inQuotes && next === '"') { current += '"'; i++; }
+    else if (char === '"') inQuotes = !inQuotes;
+    else if (char === "," && !inQuotes) { result.push(current.trim()); current = ""; }
+    else current += char;
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, "").split("\n").filter(line => line.trim());
+  const headers = splitCSVLine(lines[0]).map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const values = splitCSVLine(line);
+    const row = {};
+    headers.forEach((h, i) => row[h] = values[i] ?? "");
+    return row;
+  });
+}
+
+fileInput.addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  statusEl.textContent = "Loading file...";
+  try {
+    const name = file.name.toLowerCase();
+    if (name.endsWith(".csv")) {
+      rows = parseCSV(await file.text()).map(cleanKeys);
+    } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }).map(cleanKeys);
+    } else throw new Error("Unsupported file type. Use CSV, XLSX, or XLS.");
+
+    rows = rows.filter(has2DLandmarks);
+    if (!rows.length) throw new Error("No usable 2D OpenFace x_0/y_0 columns found. This version does not use 3D X/Y/Z columns.");
+
+    baseline = makeBaseline(rows.slice(0, Math.min(45, rows.length)));
+    currentFrame = 0;
+    timeline.max = rows.length - 1;
+    timeline.value = 0;
+    statusEl.textContent = `Loaded ${rows.length} frames using 2D landmarks only.`;
+    drawFrame();
+  } catch (err) {
+    rows = [];
+    baseline = null;
+    statusEl.textContent = "Error: " + err.message;
+    clearCanvas();
+  }
+});
+
+function has2DLandmarks(row) {
+  return Number.isFinite(Number(row.x_0)) && Number.isFinite(Number(row.y_0));
+}
+
+function point(row, i) {
+  const x = Number(row[`x_${i}`]);
+  const y = Number(row[`y_${i}`]);
+  return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+}
+
+function pts(row) { return Array.from({ length: 68 }, (_, i) => point(row, i)); }
+function avg(points, ids, axis) {
+  const vals = ids.map(i => points[i]).filter(Boolean).map(p => p[axis]);
+  return vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : 0;
+}
+function dist(a, b) { return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function metricsFromPoints(p) {
+  const faceH = Math.max(dist(p[27], p[8]), dist(p[19], p[8]), 1);
+  const faceW = Math.max(dist(p[0], p[16]), 1);
+
+  const leftEyeOpen = (dist(p[37], p[41]) + dist(p[38], p[40])) / 2 / faceH;
+  const rightEyeOpen = (dist(p[43], p[47]) + dist(p[44], p[46])) / 2 / faceH;
+  const eyeOpen = (leftEyeOpen + rightEyeOpen) / 2;
+
+  const leftEyeY = avg(p, [36,37,38,39,40,41], "y");
+  const rightEyeY = avg(p, [42,43,44,45,46,47], "y");
+  const leftBrowY = avg(p, [17,18,19,20,21], "y");
+  const rightBrowY = avg(p, [22,23,24,25,26], "y");
+  const browGap = (((leftEyeY - leftBrowY) + (rightEyeY - rightBrowY)) / 2) / faceH;
+
+  const mouthOpen = ((dist(p[62], p[66]) + dist(p[63], p[65])) / 2) / faceH;
+  const mouthWidth = dist(p[48], p[54]) / faceW;
+  const mouthCenterY = avg(p, [50,51,52,57,58,59], "y");
+  const cornerY = avg(p, [48,54], "y");
+  const smile = (mouthCenterY - cornerY) / faceH; // positive means corners are up in image coordinates
+  const jawDrop = (p[8].y - avg(p, [27,28,29,30], "y")) / faceH;
+
+  return { faceH, faceW, eyeOpen, leftEyeOpen, rightEyeOpen, browGap, mouthOpen, mouthWidth, smile, jawDrop };
+}
+
+function makeBaseline(sampleRows) {
+  const ms = sampleRows.map(r => metricsFromPoints(pts(r)));
+  const mean = key => ms.reduce((s,m)=>s + m[key], 0) / Math.max(ms.length, 1);
+  return {
+    eyeOpen: mean("eyeOpen"), browGap: mean("browGap"), mouthOpen: mean("mouthOpen"),
+    mouthWidth: mean("mouthWidth"), smile: mean("smile"), jawDrop: mean("jawDrop")
+  };
+}
+
+function expression(row) {
+  const m = metricsFromPoints(pts(row));
+  const g = Number(gainInput.value) || 1;
+  return {
+    browRaise: clamp((m.browGap - baseline.browGap) * 750 * g, -32, 45),
+    eyeOpen: clamp(34 + (m.eyeOpen - baseline.eyeOpen) * 900 * g, 10, 70),
+    mouthOpen: clamp(28 + (m.mouthOpen - baseline.mouthOpen) * 1100 * g, 8, 135),
+    mouthWidth: clamp(92 + (m.mouthWidth - baseline.mouthWidth) * 280 * g, 60, 160),
+    smile: clamp((m.smile - baseline.smile) * 760 * g, -45, 45),
+    jaw: clamp((m.jawDrop - baseline.jawDrop) * 220 * g, -12, 32),
+    raw: m
+  };
+}
+
+function drawFrame() {
+  if (!rows.length || !baseline) return clearCanvas();
+  const row = rows[currentFrame];
+  const e = expression(row);
+  clearCanvas();
+  drawFace(e);
+  if (showGuides.checked) drawLandmarkGuide(pts(row));
+  timeline.value = currentFrame;
+  const frameNumber = row.frame ?? currentFrame + 1;
+  const timestamp = row.timestamp ? ` | Time: ${Number(row.timestamp).toFixed(3)}s` : "";
+  const confidence = row.confidence ? ` | Confidence: ${Number(row.confidence).toFixed(2)}` : "";
+  statsEl.textContent = `Frame: ${currentFrame + 1} / ${rows.length} | OpenFace frame: ${frameNumber}${timestamp}${confidence} | AU-style: brow ${e.browRaise.toFixed(0)}, eye ${e.eyeOpen.toFixed(0)}, mouth ${e.mouthOpen.toFixed(0)}, smile ${e.smile.toFixed(0)}`;
+}
+
+function drawFace(e) {
+  const cx = canvas.width / 2, cy = canvas.height / 2 + 5 + e.jaw * 0.2;
+  ctx.save();
+
+  // head
+  ctx.fillStyle = "#ffd8b5";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 178, 246 + e.jaw, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // cheeks
+  ctx.fillStyle = "rgba(255,145,130,0.36)";
+  ctx.beginPath(); ctx.ellipse(cx - 92, cy + 50, 28, 17, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 92, cy + 50, 28, 17, 0, 0, Math.PI * 2); ctx.fill();
+
+  // eyebrows: move up/down from browRaise. Positive browRaise means raised, so draw higher.
+  const browY = cy - 140 - e.browRaise;
+  ctx.strokeStyle = "#3b2117";
+  ctx.lineWidth = 8;
+  ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(cx - 132, browY); ctx.lineTo(cx - 78, browY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + 78, browY); ctx.lineTo(cx + 132, browY); ctx.stroke();
+
+  // eyes
+  drawEye(cx - 72, cy - 92, 35, e.eyeOpen / 2);
+  drawEye(cx + 72, cy - 92, 35, e.eyeOpen / 2);
+
+  // nose
+  ctx.fillStyle = "rgba(222,154,101,0.55)";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - 8, 22, 40, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // mouth, smile/frown curve plus openness
+  const mw = e.mouthWidth;
+  const mh = e.mouthOpen;
+  const my = cy + 110 + e.jaw;
+  const curve = -e.smile; // smile lifts corners upward
+  ctx.fillStyle = "#571416";
+  ctx.beginPath();
+  ctx.moveTo(cx - mw/2, my + curve);
+  ctx.bezierCurveTo(cx - mw/3, my - mh * 0.42, cx + mw/3, my - mh * 0.42, cx + mw/2, my + curve);
+  ctx.bezierCurveTo(cx + mw/2, my + mh, cx - mw/2, my + mh, cx - mw/2, my + curve);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(70,0,0,0.35)";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // lower lip highlight
+  ctx.strokeStyle = "rgba(255,150,130,0.65)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(cx, my + mh * 0.72, Math.max(18, mw * 0.26), 0.18 * Math.PI, 0.82 * Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawEye(x, y, w, h) {
+  h = clamp(h, 7, 36);
+  ctx.fillStyle = "white";
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#111";
+  ctx.beginPath();
+  ctx.arc(x, y, clamp(h * 0.45, 5, 12), 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawLandmarkGuide(p) {
+  const valid = p.filter(Boolean);
+  const minX = Math.min(...valid.map(q=>q.x)), maxX = Math.max(...valid.map(q=>q.x));
+  const minY = Math.min(...valid.map(q=>q.y)), maxY = Math.max(...valid.map(q=>q.y));
+  const scale = Math.min(150 / Math.max(maxX-minX,1), 110 / Math.max(maxY-minY,1));
+  const ox = 25, oy = 25;
+  ctx.fillStyle = "rgba(0,0,0,0.45)"; ctx.fillRect(15, 15, 180, 145);
+  ctx.fillStyle = "#00e5ff";
+  for (const q of valid) {
+    const x = ox + (q.x - minX) * scale;
+    const y = oy + (q.y - minY) * scale;
+    ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#eeeeee";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+function setFrame(index) {
+  if (!rows.length) return;
+  currentFrame = Math.max(0, Math.min(rows.length - 1, index));
+  drawFrame();
+}
+function togglePlay() {
+  if (!rows.length) return;
+  playing = !playing;
+  playPause.textContent = playing ? "⏸ Pause" : "▶ Play";
+  lastStepTime = performance.now();
+  requestAnimationFrame(animationLoop);
+}
+function animationLoop(now) {
+  if (!playing) return;
+  const fps = Math.max(1, Math.min(120, Number(fpsInput.value) || 30));
+  if (now - lastStepTime >= 1000 / fps) {
+    currentFrame = (currentFrame + 1) % rows.length;
+    drawFrame();
+    lastStepTime = now;
+  }
+  requestAnimationFrame(animationLoop);
+}
+
+playPause.addEventListener("click", togglePlay);
+document.getElementById("back1").addEventListener("click", () => setFrame(currentFrame - 1));
+document.getElementById("forward1").addEventListener("click", () => setFrame(currentFrame + 1));
+document.getElementById("back10").addEventListener("click", () => setFrame(currentFrame - 10));
+document.getElementById("forward10").addEventListener("click", () => setFrame(currentFrame + 10));
+timeline.addEventListener("input", () => setFrame(Number(timeline.value)));
+gainInput.addEventListener("input", drawFrame);
+showGuides.addEventListener("change", drawFrame);
+document.addEventListener("keydown", event => {
+  if (event.code === "Space") { event.preventDefault(); togglePlay(); }
+  else if (event.code === "ArrowLeft") setFrame(currentFrame - 1);
+  else if (event.code === "ArrowRight") setFrame(currentFrame + 1);
+});
+clearCanvas();
+</script>
+</body>
+</html>
