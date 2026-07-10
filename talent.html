@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Kumon Math Generator</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 35px;
+}
+
+h1 {
+    text-align:center;
+}
+
+select, button {
+    font-size:18px;
+    padding:8px;
+}
+
+#worksheet {
+    margin-top:30px;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+    font-size:22px;
+}
+
+.question {
+    min-height:80px;
+}
+
+pre {
+    font-family: monospace;
+    font-size:20px;
+}
+
+@media print {
+    select, button {
+        display:none;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>Kumon Style Worksheet Generator</h1>
+
+
+<select id="type">
+
+<option value="add">Addition</option>
+<option value="subtract">Subtraction</option>
+<option value="multiply">Multiplication</option>
+<option value="divide">Division</option>
+
+<option value="fracAdd">Fraction Addition/Subtraction</option>
+<option value="fracMult">Fraction Multiplication</option>
+
+<option value="pemdas">PEMDAS</option>
+
+<option value="expand">Algebra Expansion</option>
+
+</select>
+
+
+<button onclick="generate()">Generate 100 Questions</button>
+
+
+<div id="worksheet"></div>
+
+
+<script>
+
+function r(min,max){
+return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+
+// ADDITION
+
+function add(){
+let a=r(100,9999);
+let b=r(100,9999);
+
+return `<pre>
+   ${a}
++  ${b}
+---------
+</pre>`;
+}
+
+
+// SUBTRACTION
+
+function subtract(){
+
+let a=r(500,9999);
+let b=r(100,a);
+
+return `<pre>
+   ${a}
+-  ${b}
+---------
+</pre>`;
+}
+
+
+// MULTIPLICATION
+
+function multiply(){
+
+let a=r(10,999);
+let b=r(2,99);
+
+return `<pre>
+   ${a}
+×   ${b}
+---------
+</pre>`;
+}
+
+
+// DIVISION
+
+function divide(){
+
+let divisor=r(2,50);
+let answer=r(2,200);
+let dividend=divisor*answer;
+
+return `<pre>
+      ______
+${divisor} ) ${dividend}
+</pre>`;
+}
+
+
+// FRACTION ADD/SUBTRACT
+
+function fracAdd(){
+
+let a=r(1,9);
+let b=r(2,10);
+let c=r(1,9);
+let d=r(2,10);
+
+let sign=Math.random()>0.5?"+":"-";
+
+return `
+${a}     ${c}<br>
+— ${sign} — =<br>
+${b}     ${d}
+`;
+
+}
+
+
+// FRACTION MULTIPLY
+
+function fracMult(){
+
+let a=r(1,9);
+let b=r(2,10);
+let c=r(1,9);
+let d=r(2,10);
+
+return `
+${a}     ${c}<br>
+— × — =<br>
+${b}     ${d}
+`;
+
+}
+
+
+// PEMDAS
+
+function pemdas(){
+
+let a=r(2,20);
+let b=r(2,20);
+let c=r(2,10);
+
+let ops=[
+`${a} + ${b} × ${c}`,
+`(${a} + ${b}) × ${c}`,
+`${a}² + ${b} × ${c}`,
+`${a} × (${b} - ${c}) + ${c}`,
+`${a} + ${b} ÷ ${c}`
+];
+
+return ops[r(0,ops.length-1)]+" =";
+
+}
+
+
+// ALGEBRA EXPANSION
+
+function expand(){
+
+let a=r(1,30);
+let b=r(1,30);
+
+return `(x + ${a})(x + ${b}) =`;
+
+}
+
+
+
+
+function generate(){
+
+let type=document.getElementById("type").value;
+
+let box=document.getElementById("worksheet");
+
+box.innerHTML="";
+
+
+for(let i=1;i<=100;i++){
+
+let q="";
+
+
+if(type=="add") q=add();
+if(type=="subtract") q=subtract();
+if(type=="multiply") q=multiply();
+if(type=="divide") q=divide();
+
+if(type=="fracAdd") q=fracAdd();
+if(type=="fracMult") q=fracMult();
+
+if(type=="pemdas") q=pemdas();
+
+if(type=="expand") q=expand();
+
+
+box.innerHTML+=`
+<div class="question">
+${i}. ${q}
+</div>
+`;
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
