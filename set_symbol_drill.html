@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Math Logic & Sets Drill</title>
+
+<title>Math Logic Drill</title>
 
 <style>
+
 body{
     background:#111;
     color:white;
@@ -17,9 +19,9 @@ h1{
 }
 
 #question{
-    font-size:30px;
-    margin:50px;
-    line-height:1.6;
+    font-size:28px;
+    margin:45px;
+    line-height:1.7;
 }
 
 button{
@@ -35,6 +37,11 @@ button:hover{
     transform:scale(1.05);
 }
 
+.option{
+    background:white;
+    color:black;
+}
+
 .correct{
     background:#00aa55;
     color:white;
@@ -45,14 +52,10 @@ button:hover{
     color:white;
 }
 
-.option{
-    background:white;
-    color:black;
-}
-
 #score{
     font-size:25px;
 }
+
 </style>
 
 </head>
@@ -62,14 +65,18 @@ button:hover{
 
 <h1>Sets + Logic Brain Drill</h1>
 
-<div id="score">Score: 0</div>
+<div id="score">
+Score: 0
+</div>
 
 <div id="question"></div>
 
 <div id="answers"></div>
 
 
+
 <script>
+
 
 let score=0;
 
@@ -80,6 +87,7 @@ function randomSet(){
     let s=[];
 
     let size=Math.floor(Math.random()*4)+1;
+
 
     while(s.length<size){
 
@@ -98,33 +106,174 @@ function randomSet(){
 
 
 function equal(a,b){
+
     return a.length===b.length &&
     a.every(x=>b.includes(x));
+
 }
 
 
 
 function union(a,b){
+
     return [...new Set([...a,...b])].sort();
+
 }
 
 
 
 function intersection(a,b){
+
     return a.filter(x=>b.includes(x)).sort();
+
 }
 
 
 
 function subset(a,b){
+
     return a.every(x=>b.includes(x));
+
 }
 
 
 
 function properSubset(a,b){
+
     return subset(a,b)&&!equal(a,b);
+
 }
+
+
+
+
+
+function logicQuestion(){
+
+
+    let examples=[
+
+
+    {
+        p:"a number is divisible by 4",
+        q:"the number is even",
+        equivalent:"If a number is not even, then it is not divisible by 4."
+    },
+
+
+    {
+        p:"a shape is a square",
+        q:"it has four sides",
+        equivalent:"If a shape does not have four sides, then it is not a square."
+    },
+
+
+    {
+        p:"x is greater than 0",
+        q:"x³ is not 0",
+        equivalent:"If x³ is 0, then x is not greater than 0."
+    },
+
+
+    {
+        p:"a number is divisible by 6",
+        q:"a number is divisible by 3",
+        equivalent:"If a number is not divisible by 3, then it is not divisible by 6."
+    }
+
+];
+
+
+let item=
+examples[Math.floor(Math.random()*examples.length)];
+
+
+
+let type=Math.floor(Math.random()*4);
+
+
+
+let first=
+`If ${item.p}, then ${item.q}.`;
+
+let second="";
+
+let answer=false;
+
+
+
+// same
+
+if(type===0){
+
+second=first;
+
+answer=true;
+
+}
+
+
+
+// contrapositive
+
+if(type===1){
+
+second=item.equivalent;
+
+answer=true;
+
+}
+
+
+
+// converse
+
+if(type===2){
+
+second=
+`If ${item.q}, then ${item.p}.`;
+
+answer=false;
+
+}
+
+
+
+// inverse
+
+if(type===3){
+
+second=
+`If ${item.p.replace("not ","")}
+ is not true, then ${item.q} is not true.`;
+
+answer=false;
+
+}
+
+
+
+return{
+
+question:
+`
+Statement 1:<br>
+${first}
+<br><br>
+
+Statement 2:<br>
+${second}
+`,
+
+answer
+
+};
+
+
+}
+
+
+
 
 
 
@@ -132,7 +281,9 @@ function properSubset(a,b){
 function generateQuestion(){
 
 
-let type=Math.floor(Math.random()*12);
+
+let type=Math.floor(Math.random()*13);
+
 
 
 let A=randomSet();
@@ -144,13 +295,22 @@ let ans=false;
 
 
 
-// UNION
+// logic
+
+if(type===12){
+
+    return logicQuestion();
+
+}
+
+
+
 
 if(type===0){
 
-let result=union(A,B);
+let x=A[Math.floor(Math.random()*A.length)];
 
-q=`{${A}} ∪ {${B}} = {${result}}`;
+q=`${x} ∈ {${A}}`;
 
 ans=true;
 
@@ -159,30 +319,12 @@ ans=true;
 
 
 
-// UNION TRICK
 
 if(type===1){
 
-let result=union(A,B);
+let x=10;
 
-result.push(9);
-
-q=`{${A}} ∪ {${B}} = {${result}}`;
-
-ans=false;
-
-}
-
-
-
-
-// INTERSECTION
-
-if(type===2){
-
-let result=intersection(A,B);
-
-q=`{${A}} ∩ {${B}} = {${result}}`;
+q=`${x} ∉ {${A}}`;
 
 ans=true;
 
@@ -191,9 +333,36 @@ ans=true;
 
 
 
-// EMPTY SET UNION
+
+if(type===2){
+
+let C=[...new Set([...A,...B])];
+
+q=`{${A}} ∪ {${B}} = {${C}}`;
+
+ans=true;
+
+}
+
+
+
+
 
 if(type===3){
+
+let C=intersection(A,B);
+
+q=`{${A}} ∩ {${B}} = {${C}}`;
+
+ans=true;
+
+}
+
+
+
+
+
+if(type===4){
 
 q=`{${A}} ∪ ∅ = {${A}}`;
 
@@ -204,9 +373,8 @@ ans=true;
 
 
 
-// EMPTY SET INTERSECTION
 
-if(type===4){
+if(type===5){
 
 q=`{${A}} ∩ ∅ = ∅`;
 
@@ -217,115 +385,36 @@ ans=true;
 
 
 
-// SUBSET
-
-if(type===5){
-
-q=`{${A}} ⊂ {${[...new Set([...A,...B])]}}`;
-
-ans=true;
-
-}
-
-
-
-
-// PROPER SUBSET
 
 if(type===6){
 
-let bigger=[...new Set([...A,...B,9])];
+let C=[...new Set([...A,...B])];
 
-q=`{${A}} ⊊ {${bigger}}`;
+q=`{${A}} ⊂ {${C}}`;
 
-ans=true;
+ans=subset(A,C);
 
 }
 
 
 
 
-// CONDITIONAL
 
 if(type===7){
 
-let examples=[
+let C=[...new Set([...A,...B,9])];
 
-[
-"If 12 is divisible by 4, then 12 is even.",
-true
-],
+q=`{${A}} ⊊ {${C}}`;
 
-[
-"If 6 is even, then 6 is divisible by 4.",
-false
-],
-
-[
-"If 9 is divisible by 3, then 9 is odd.",
-true
-],
-
-[
-"If 5 is even, then 5 is divisible by 10.",
-true
-]
-
-];
-
-
-let x=examples[Math.floor(Math.random()*examples.length)];
-
-q=x[0];
-
-ans=x[1];
+ans=properSubset(A,C);
 
 }
 
 
 
 
-// CONTRAPOSITIVE
 
 if(type===8){
-
-q=`
-Original:<br>
-If a number is divisible by 4, then it is even.<br><br>
-
-Contrapositive:<br>
-If a number is not even, then it is not divisible by 4.
-`;
-
-ans=true;
-
-}
-
-
-
-
-// CONVERSE
-
-if(type===9){
-
-q=`
-Original:<br>
-If a number is divisible by 4, then it is even.<br><br>
-
-Converse:<br>
-If a number is even, then it is divisible by 4.
-`;
-
-ans=false;
-
-}
-
-
-
-
-// EMPTY SET SUBSET
-
-if(type===10){
 
 q=`∅ ⊂ {${A}}`;
 
@@ -336,13 +425,10 @@ ans=true;
 
 
 
-// EQUALITY
 
-if(type===11){
+if(type===9){
 
-let C=[...A];
-
-q=`{${A}} = {${C.reverse()}}`;
+q=`{${A}} = {${[...A].reverse()}}`;
 
 ans=true;
 
@@ -350,13 +436,41 @@ ans=true;
 
 
 
-return {
+
+
+if(type===10){
+
+q=`{${A}} ≠ {${B}}`;
+
+ans=!equal(A,B);
+
+}
+
+
+
+
+
+if(type===11){
+
+q=`{${A}} ⊃ {${B}}`;
+
+ans=subset(B,A);
+
+}
+
+
+
+return{
+
 question:q,
 answer:ans
+
 };
 
 
 }
+
+
 
 
 
@@ -383,7 +497,7 @@ area.innerHTML="";
 
 
 
-// TRUE LEFT, FALSE RIGHT
+// always true left
 
 ["True","False"].forEach(choice=>{
 
@@ -395,13 +509,14 @@ btn.innerHTML=choice;
 btn.className="option";
 
 
+
 btn.onclick=function(){
 
 
-let chosen=(choice==="True");
+let picked=(choice==="True");
 
 
-if(chosen===current.answer){
+if(picked===current.answer){
 
 score++;
 
@@ -421,6 +536,7 @@ document.getElementById("score").innerHTML=
 "Score: "+score;
 
 
+
 setTimeout(load,800);
 
 
@@ -429,6 +545,7 @@ setTimeout(load,800);
 
 
 area.appendChild(btn);
+
 
 
 });
