@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Set Symbol Brain Drill</title>
+
+<style>
+body {
+    background:#111;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+    padding:30px;
+}
+
+h1 {
+    color:#00ff99;
+}
+
+#question {
+    font-size:32px;
+    margin:40px;
+}
+
+button {
+    width:130px;
+    height:70px;
+    margin:10px;
+    font-size:28px;
+    border-radius:15px;
+    cursor:pointer;
+}
+
+button:hover {
+    transform:scale(1.08);
+}
+
+.correct {
+    background:#00aa55;
+    color:white;
+}
+
+.wrong {
+    background:#cc3333;
+    color:white;
+}
+
+.option {
+    background:white;
+    color:black;
+}
+
+#score {
+    font-size:24px;
+}
+</style>
+
+</head>
+
+
+<body>
+
+<h1>Set Symbol Master Drill</h1>
+
+<div id="score">
+Score: 0
+</div>
+
+
+<div id="question">
+Loading...
+</div>
+
+
+<div id="answers"></div>
+
+
+
+<script>
+
+
+let score = 0;
+
+
+
+const symbols = [
+    "∈",
+    "∉",
+    "=",
+    "≠",
+    "⊂",
+    "⊊",
+    "⊃"
+];
+
+
+
+function shuffle(array){
+    return array.sort(()=>Math.random()-0.5);
+}
+
+
+
+function randomSet(){
+
+    let nums=[];
+
+    let amount = Math.floor(Math.random()*3)+2;
+
+    while(nums.length < amount){
+
+        let n=Math.floor(Math.random()*9)+1;
+
+        if(!nums.includes(n)){
+            nums.push(n);
+        }
+
+    }
+
+    return nums.sort();
+
+}
+
+
+
+function sameSet(a,b){
+
+    return a.length==b.length &&
+    a.every(x=>b.includes(x));
+
+}
+
+
+
+function subset(a,b){
+
+    return a.every(x=>b.includes(x));
+
+}
+
+
+
+function properSubset(a,b){
+
+    return subset(a,b) && !sameSet(a,b);
+
+}
+
+
+
+function createQuestion(){
+
+
+    let type=Math.floor(Math.random()*8);
+
+
+
+    let A=randomSet();
+
+    let B=randomSet();
+
+
+
+    let answer="";
+
+    let question="";
+
+
+
+
+    // Element belongs
+
+    if(type==0){
+
+        let x=Math.floor(Math.random()*9)+1;
+
+        let set=randomSet();
+
+        let inside=Math.random()>0.5;
+
+        if(inside){
+            set.push(x);
+            set=[...new Set(set)];
+            answer="∈";
+        }
+        else{
+
+            while(set.includes(x)){
+                x=Math.floor(Math.random()*9)+1;
+            }
+
+            answer="∉";
+        }
+
+
+        question=
+        `${x} ___ {${set.join(",")}}`;
+
+    }
+
+
+
+
+    // Equality
+
+    if(type==1){
+
+        if(Math.random()>0.5){
+
+            B=[...A];
+
+        }
+
+
+        question=
+        `{${A.join(",")}} ___ {${B.join(",")}}`;
+
+
+        answer=
+        sameSet(A,B) ? "=" : "≠";
+
+    }
+
+
+
+
+
+    // Subset
+
+    if(type==2){
+
+
+        B=[...new Set([...A,
+            Math.floor(Math.random()*9)+1
+        ])];
+
+
+        question=
+        `{${A.join(",")}} ___ {${B.join(",")}}`;
+
+
+        answer=
+        properSubset(A,B) ? "⊊" : "⊂";
+
+    }
+
+
+
+
+
+    // Proper subset
+
+    if(type==3){
+
+
+        B=[...A];
+
+
+        let extra=Math.floor(Math.random()*9)+1;
+
+        while(B.includes(extra)){
+            extra=Math.floor(Math.random()*9)+1;
+        }
+
+        B.push(extra);
+
+        B.sort();
+
+
+        question=
+        `{${A.join(",")}} ___ {${B.join(",")}}`;
+
+
+        answer="⊊";
+
+    }
+
+
+
+
+
+    // Contains
+
+    if(type==4){
+
+
+        B=[...new Set([...A])];
+
+
+        let extra=Math.floor(Math.random()*9)+1;
+
+        while(B.includes(extra)){
+            extra=Math.floor(Math.random()*9)+1;
+        }
+
+
+        A=[...B,extra];
+
+        A.sort();
+
+
+        question=
+        `{${A.join(",")}} ___ {${B.join(",")}}`;
+
+
+        answer="⊃";
+
+    }
+
+
+
+
+
+    // Not equal
+
+    if(type==5){
+
+
+        B=[...A];
+
+        let extra=Math.floor(Math.random()*9)+1;
+
+
+        while(B.includes(extra)){
+            extra=Math.floor(Math.random()*9)+1;
+        }
+
+
+        B.push(extra);
+
+
+        question=
+        `{${A.join(",")}} ___ {${B.join(",")}}`;
+
+
+        answer="≠";
+
+    }
+
+
+
+
+
+    // True false style
+
+    if(type==6){
+
+        let truth=Math.random()>0.5;
+
+
+        if(truth){
+
+            B=[...A,
+            Math.floor(Math.random()*9)+1];
+
+            question=
+            `{${A.join(",")}} ⊂ {${B.join(",")}}`;
+
+            answer="True";
+
+        }
+        else{
+
+            question=
+            `{${A.join(",")}} ⊊ {${A.join(",")}}`;
+
+            answer="False";
+
+        }
+
+    }
+
+
+
+
+    // Membership true false
+
+    if(type==7){
+
+
+        let x=A[Math.floor(Math.random()*A.length)];
+
+
+        question=
+        `${x} ∈ {${A.join(",")}}`;
+
+
+        answer="True";
+
+
+    }
+
+
+
+    return {
+        question,
+        answer
+    };
+
+}
+
+
+
+
+
+let current;
+
+
+
+function load(){
+
+
+    current=createQuestion();
+
+
+
+    document.getElementById("question").innerHTML =
+    current.question;
+
+
+
+    let choices=[...symbols];
+
+
+    if(current.answer=="True" || current.answer=="False"){
+
+        choices=[
+            "True",
+            "False",
+            ...shuffle(symbols).slice(0,5)
+        ];
+
+    }
+
+
+    shuffle(choices);
+
+
+
+    let area=document.getElementById("answers");
+
+    area.innerHTML="";
+
+
+
+    choices.forEach(choice=>{
+
+
+        let btn=document.createElement("button");
+
+
+        btn.innerHTML=choice;
+
+        btn.className="option";
+
+
+
+        btn.onclick=function(){
+
+
+            if(choice==current.answer){
+
+                score++;
+
+                btn.className="correct";
+
+            }
+
+            else{
+
+                btn.className="wrong";
+
+            }
+
+
+
+            document.getElementById("score").innerHTML=
+            "Score: "+score;
+
+
+
+            setTimeout(load,700);
+
+
+        };
+
+
+
+        area.appendChild(btn);
+
+
+    });
+
+
+
+}
+
+
+
+load();
+
+
+
+</script>
+
+
+</body>
+</html>
