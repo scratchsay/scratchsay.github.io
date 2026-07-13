@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Set Theory Practice</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
+    background: #f4f4f4;
+}
+
+.box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #aaa;
+}
+
+button {
+    padding: 10px;
+    margin: 10px;
+    cursor: pointer;
+}
+
+input {
+    width: 300px;
+    padding: 8px;
+}
+
+#answer {
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>Set Theory Quiz</h1>
+
+<p id="sets"></p>
+
+<h3 id="question"></h3>
+
+<input id="userAnswer" placeholder="Enter answer">
+<br>
+
+<button onclick="checkAnswer()">Check</button>
+<button onclick="newQuestion()">Next Question</button>
+
+<p id="answer"></p>
+
+</div>
+
+
+<script>
+
+let A, B, correctAnswer, operation;
+
+
+function randomSet(){
+    let numbers = [];
+    
+    while(numbers.length < 3){
+        let n = Math.floor(Math.random()*9)+1;
+        if(!numbers.includes(n))
+            numbers.push(n);
+    }
+
+    return numbers.sort();
+}
+
+
+function setText(arr){
+    return "{" + arr.join(", ") + "}";
+}
+
+
+function newQuestion(){
+
+    A = randomSet();
+    B = randomSet();
+
+    let operations = [
+        "union",
+        "intersection",
+        "difference",
+        "subset"
+    ];
+
+    operation = operations[Math.floor(Math.random()*operations.length)];
+
+    document.getElementById("sets").innerHTML =
+        "A = " + setText(A) +
+        "<br>B = " + setText(B);
+
+
+    if(operation=="union"){
+
+        document.getElementById("question").innerHTML =
+        "Find A ∪ B";
+
+        correctAnswer =
+        [...new Set([...A,...B])].sort();
+
+    }
+
+
+    if(operation=="intersection"){
+
+        document.getElementById("question").innerHTML =
+        "Find A ∩ B";
+
+        correctAnswer =
+        A.filter(x => B.includes(x));
+
+    }
+
+
+    if(operation=="difference"){
+
+        document.getElementById("question").innerHTML =
+        "Find A - B";
+
+        correctAnswer =
+        A.filter(x => !B.includes(x));
+
+    }
+
+
+    if(operation=="subset"){
+
+        document.getElementById("question").innerHTML =
+        "Is A a subset of B? (yes/no)";
+
+        correctAnswer =
+        A.every(x => B.includes(x)) ? "yes" : "no";
+
+    }
+
+
+    document.getElementById("userAnswer").value="";
+    document.getElementById("answer").innerHTML="";
+}
+
+
+
+function checkAnswer(){
+
+    let user =
+    document.getElementById("userAnswer").value
+    .replace(/[{}\s]/g,"")
+    .toLowerCase();
+
+
+    let correct =
+    Array.isArray(correctAnswer)
+    ?
+    correctAnswer.join(",").replace(/\s/g,"")
+    :
+    correctAnswer;
+
+
+    if(user==correct){
+        document.getElementById("answer").innerHTML =
+        "✅ Correct!";
+    }
+    else{
+        document.getElementById("answer").innerHTML =
+        "❌ Wrong. Answer: " +
+        (Array.isArray(correctAnswer)
+        ? setText(correctAnswer)
+        : correctAnswer);
+    }
+
+}
+
+
+newQuestion();
+
+</script>
+
+</body>
+</html>
