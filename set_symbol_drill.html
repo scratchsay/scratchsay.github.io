@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Set Symbol True False Drill</title>
+<title>Math Logic & Sets Drill</title>
 
 <style>
-
-body {
+body{
     background:#111;
     color:white;
     font-family:Arial;
@@ -13,47 +12,47 @@ body {
     padding:30px;
 }
 
-h1 {
+h1{
     color:#00ff99;
 }
 
-#question {
-    font-size:34px;
+#question{
+    font-size:30px;
     margin:50px;
+    line-height:1.6;
 }
 
-button {
+button{
     width:180px;
-    height:90px;
+    height:80px;
     margin:20px;
-    font-size:32px;
+    font-size:30px;
     border-radius:15px;
     cursor:pointer;
 }
 
-button:hover {
+button:hover{
     transform:scale(1.05);
 }
 
-.correct {
+.correct{
     background:#00aa55;
     color:white;
 }
 
-.wrong {
+.wrong{
     background:#cc3333;
     color:white;
 }
 
-.option {
+.option{
     background:white;
     color:black;
 }
 
-#score {
+#score{
     font-size:25px;
 }
-
 </style>
 
 </head>
@@ -61,303 +60,301 @@ button:hover {
 
 <body>
 
-<h1>Set Symbol Brain Drill</h1>
+<h1>Sets + Logic Brain Drill</h1>
 
-<div id="score">
-Score: 0
-</div>
+<div id="score">Score: 0</div>
 
-
-<div id="question">
-Loading...
-</div>
-
+<div id="question"></div>
 
 <div id="answers"></div>
 
 
-
 <script>
 
-
-let score = 0;
+let score=0;
 
 
 
 function randomSet(){
 
-    let set=[];
+    let s=[];
 
     let size=Math.floor(Math.random()*4)+1;
 
-
-    while(set.length<size){
+    while(s.length<size){
 
         let n=Math.floor(Math.random()*9)+1;
 
-        if(!set.includes(n)){
-            set.push(n);
+        if(!s.includes(n)){
+            s.push(n);
         }
 
     }
 
-
-    return set.sort();
+    return s.sort();
 
 }
 
 
 
 function equal(a,b){
-
     return a.length===b.length &&
     a.every(x=>b.includes(x));
+}
 
+
+
+function union(a,b){
+    return [...new Set([...a,...b])].sort();
+}
+
+
+
+function intersection(a,b){
+    return a.filter(x=>b.includes(x)).sort();
 }
 
 
 
 function subset(a,b){
-
     return a.every(x=>b.includes(x));
-
 }
 
 
 
 function properSubset(a,b){
-
-    return subset(a,b) && !equal(a,b);
-
+    return subset(a,b)&&!equal(a,b);
 }
+
 
 
 
 function generateQuestion(){
 
 
-    let type=Math.floor(Math.random()*7);
+let type=Math.floor(Math.random()*12);
 
 
-    let A=randomSet();
-    let B=randomSet();
+let A=randomSet();
+let B=randomSet();
 
 
-    let statement="";
-    let answer=false;
+let q="";
+let ans=false;
 
 
 
+// UNION
 
-    // ∈ and ∉
+if(type===0){
 
-    if(type===0){
+let result=union(A,B);
 
-        let x=Math.floor(Math.random()*9)+1;
+q=`{${A}} ∪ {${B}} = {${result}}`;
 
-        let inside=Math.random()>0.5;
+ans=true;
 
+}
 
-        if(inside){
 
-            if(!A.includes(x)){
-                A.push(x);
-            }
 
-            answer=true;
 
-        }else{
+// UNION TRICK
 
+if(type===1){
 
-            while(A.includes(x)){
-                x=Math.floor(Math.random()*9)+1;
-            }
+let result=union(A,B);
 
-            answer=false;
+result.push(9);
 
-        }
+q=`{${A}} ∪ {${B}} = {${result}}`;
 
+ans=false;
 
-        statement=
-        `${x} ∈ {${A.join(",")}}`;
+}
 
-    }
 
 
 
+// INTERSECTION
 
+if(type===2){
 
+let result=intersection(A,B);
 
-    // =
+q=`{${A}} ∩ {${B}} = {${result}}`;
 
-    if(type===1){
+ans=true;
 
+}
 
-        if(Math.random()>0.5){
 
-            B=[...A];
 
-        }
 
+// EMPTY SET UNION
 
-        statement=
-        `{${A.join(",")}} = {${B.join(",")}}`;
+if(type===3){
 
+q=`{${A}} ∪ ∅ = {${A}}`;
 
-        answer=equal(A,B);
+ans=true;
 
-    }
+}
 
 
 
 
+// EMPTY SET INTERSECTION
 
+if(type===4){
 
-    // ≠
+q=`{${A}} ∩ ∅ = ∅`;
 
-    if(type===2){
+ans=true;
 
+}
 
-        if(equal(A,B)){
 
-            B.push(9);
 
-        }
 
+// SUBSET
 
-        statement=
-        `{${A.join(",")}} ≠ {${B.join(",")}}`;
+if(type===5){
 
+q=`{${A}} ⊂ {${[...new Set([...A,...B])]}}`;
 
-        answer=!equal(A,B);
+ans=true;
 
-    }
+}
 
 
 
 
+// PROPER SUBSET
 
+if(type===6){
 
-    // ⊂ subset
+let bigger=[...new Set([...A,...B,9])];
 
-    if(type===3){
+q=`{${A}} ⊊ {${bigger}}`;
 
+ans=true;
 
-        if(Math.random()>0.5){
+}
 
-            B=[...new Set([
-                ...A,
-                Math.floor(Math.random()*9)+1
-            ])];
 
-        }
 
 
-        statement=
-        `{${A.join(",")}} ⊂ {${B.join(",")}}`;
+// CONDITIONAL
 
+if(type===7){
 
-        // equality allowed
+let examples=[
 
-        answer=subset(A,B);
+[
+"If 12 is divisible by 4, then 12 is even.",
+true
+],
 
-    }
+[
+"If 6 is even, then 6 is divisible by 4.",
+false
+],
 
+[
+"If 9 is divisible by 3, then 9 is odd.",
+true
+],
 
+[
+"If 5 is even, then 5 is divisible by 10.",
+true
+]
 
+];
 
 
+let x=examples[Math.floor(Math.random()*examples.length)];
 
+q=x[0];
 
-    // ⊊ proper subset
+ans=x[1];
 
-    if(type===4){
+}
 
 
-        B=[...A];
 
 
-        let extra=Math.floor(Math.random()*9)+1;
+// CONTRAPOSITIVE
 
+if(type===8){
 
-        while(B.includes(extra)){
+q=`
+Original:<br>
+If a number is divisible by 4, then it is even.<br><br>
 
-            extra=Math.floor(Math.random()*9)+1;
+Contrapositive:<br>
+If a number is not even, then it is not divisible by 4.
+`;
 
-        }
+ans=true;
 
+}
 
-        B.push(extra);
 
-        B.sort();
 
 
+// CONVERSE
 
-        statement=
-        `{${A.join(",")}} ⊊ {${B.join(",")}}`;
+if(type===9){
 
+q=`
+Original:<br>
+If a number is divisible by 4, then it is even.<br><br>
 
-        answer=properSubset(A,B);
+Converse:<br>
+If a number is even, then it is divisible by 4.
+`;
 
-    }
+ans=false;
 
+}
 
 
 
 
+// EMPTY SET SUBSET
 
+if(type===10){
 
-    // ⊃ contains
+q=`∅ ⊂ {${A}}`;
 
-    if(type===5){
+ans=true;
 
+}
 
-        A=[...new Set([
-            ...B,
-            Math.floor(Math.random()*9)+1
-        ])];
 
 
-        statement=
-        `{${A.join(",")}} ⊃ {${B.join(",")}}`;
 
+// EQUALITY
 
-        answer=subset(B,A);
+if(type===11){
 
-    }
+let C=[...A];
 
+q=`{${A}} = {${C.reverse()}}`;
 
+ans=true;
 
+}
 
 
 
+return {
+question:q,
+answer:ans
+};
 
-
-    // False trap questions
-
-    if(type===6){
-
-
-        B=[...A];
-
-
-        statement=
-        `{${A.join(",")}} ⊊ {${B.join(",")}}`;
-
-
-        answer=false;
-
-
-    }
-
-
-
-
-
-    return {
-        statement,
-        answer
-    };
 
 }
 
@@ -369,88 +366,82 @@ let current;
 
 
 
-function loadQuestion(){
+function load(){
 
 
-    current=generateQuestion();
+current=generateQuestion();
 
 
-
-    document.getElementById("question").innerHTML=
-    current.statement;
-
-
-
-    let area=document.getElementById("answers");
-
-    area.innerHTML="";
+document.getElementById("question").innerHTML=
+current.question;
 
 
 
-    // ALWAYS LEFT = TRUE, RIGHT = FALSE
+let area=document.getElementById("answers");
 
-    ["True","False"].forEach(choice=>{
-
-
-        let button=document.createElement("button");
-
-
-        button.innerHTML=choice;
-
-        button.className="option";
+area.innerHTML="";
 
 
 
-        button.onclick=function(){
+// TRUE LEFT, FALSE RIGHT
+
+["True","False"].forEach(choice=>{
 
 
-            let chosen=(choice==="True");
+let btn=document.createElement("button");
+
+btn.innerHTML=choice;
+
+btn.className="option";
+
+
+btn.onclick=function(){
+
+
+let chosen=(choice==="True");
+
+
+if(chosen===current.answer){
+
+score++;
+
+btn.className="correct";
+
+}
+
+else{
+
+btn.className="wrong";
+
+}
 
 
 
-            if(chosen===current.answer){
+document.getElementById("score").innerHTML=
+"Score: "+score;
 
-                score++;
 
-                button.className="correct";
+setTimeout(load,800);
 
-            }
 
-            else{
-
-                button.className="wrong";
-
-            }
+};
 
 
 
-            document.getElementById("score").innerHTML=
-            "Score: "+score;
+area.appendChild(btn);
 
 
-
-            setTimeout(loadQuestion,700);
-
-
-        };
-
-
-
-        area.appendChild(button);
-
-
-    });
+});
 
 
 }
 
 
 
-loadQuestion();
+load();
 
 
 </script>
-
 
 </body>
 </html>
