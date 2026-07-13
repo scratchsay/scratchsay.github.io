@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Set Symbol Brain Drill</title>
+<title>Set Symbol True/False Drill</title>
 
 <style>
 body {
@@ -18,20 +18,20 @@ h1 {
 
 #question {
     font-size:32px;
-    margin:40px;
+    margin:50px;
 }
 
 button {
-    width:130px;
-    height:70px;
-    margin:10px;
-    font-size:28px;
+    width:180px;
+    height:80px;
+    margin:15px;
+    font-size:30px;
     border-radius:15px;
     cursor:pointer;
 }
 
 button:hover {
-    transform:scale(1.08);
+    transform:scale(1.05);
 }
 
 .correct {
@@ -56,75 +56,53 @@ button:hover {
 
 </head>
 
-
 <body>
 
-<h1>Set Symbol Master Drill</h1>
+<h1>Set Symbol True/False Drill</h1>
 
-<div id="score">
-Score: 0
-</div>
+<div id="score">Score: 0</div>
 
-
-<div id="question">
-Loading...
-</div>
-
+<div id="question"></div>
 
 <div id="answers"></div>
 
 
-
 <script>
-
 
 let score = 0;
 
 
 
-const symbols = [
-    "∈",
-    "∉",
-    "=",
-    "≠",
-    "⊂",
-    "⊊",
-    "⊃"
-];
-
-
-
-function shuffle(array){
-    return array.sort(()=>Math.random()-0.5);
+function shuffle(arr){
+    return arr.sort(()=>Math.random()-0.5);
 }
 
 
 
 function randomSet(){
 
-    let nums=[];
+    let set=[];
 
-    let amount = Math.floor(Math.random()*3)+2;
+    let size=Math.floor(Math.random()*4)+1;
 
-    while(nums.length < amount){
+    while(set.length<size){
 
         let n=Math.floor(Math.random()*9)+1;
 
-        if(!nums.includes(n)){
-            nums.push(n);
+        if(!set.includes(n)){
+            set.push(n);
         }
-
     }
 
-    return nums.sort();
+    return set.sort();
 
 }
 
 
 
-function sameSet(a,b){
+function equal(a,b){
 
-    return a.length==b.length &&
+    return a.length===b.length &&
     a.every(x=>b.includes(x));
 
 }
@@ -141,59 +119,61 @@ function subset(a,b){
 
 function properSubset(a,b){
 
-    return subset(a,b) && !sameSet(a,b);
+    return subset(a,b) && !equal(a,b);
 
 }
 
 
 
-function createQuestion(){
+function contains(a,b){
+
+    return subset(b,a);
+
+}
 
 
-    let type=Math.floor(Math.random()*8);
 
 
+
+function generateQuestion(){
+
+    let type=Math.floor(Math.random()*7);
 
     let A=randomSet();
-
     let B=randomSet();
 
-
-
-    let answer="";
-
-    let question="";
+    let statement;
+    let answer;
 
 
 
-
-    // Element belongs
-
-    if(type==0){
+    // Membership ∈ / ∉
+    if(type===0){
 
         let x=Math.floor(Math.random()*9)+1;
 
-        let set=randomSet();
+        let shouldBeInside=Math.random()>0.5;
 
-        let inside=Math.random()>0.5;
 
-        if(inside){
-            set.push(x);
-            set=[...new Set(set)];
-            answer="∈";
-        }
-        else{
+        if(shouldBeInside){
 
-            while(set.includes(x)){
+            if(!A.includes(x)){
+                A.push(x);
+            }
+
+            answer=true;
+
+        }else{
+
+            while(A.includes(x)){
                 x=Math.floor(Math.random()*9)+1;
             }
 
-            answer="∉";
+            answer=false;
         }
 
 
-        question=
-        `${x} ___ {${set.join(",")}}`;
+        statement=`${x} ∈ {${A.join(",")}}`;
 
     }
 
@@ -201,108 +181,17 @@ function createQuestion(){
 
 
     // Equality
-
-    if(type==1){
+    if(type===1){
 
         if(Math.random()>0.5){
-
             B=[...A];
-
         }
 
 
-        question=
-        `{${A.join(",")}} ___ {${B.join(",")}}`;
+        statement=
+        `{${A.join(",")}} = {${B.join(",")}}`;
 
-
-        answer=
-        sameSet(A,B) ? "=" : "≠";
-
-    }
-
-
-
-
-
-    // Subset
-
-    if(type==2){
-
-
-        B=[...new Set([...A,
-            Math.floor(Math.random()*9)+1
-        ])];
-
-
-        question=
-        `{${A.join(",")}} ___ {${B.join(",")}}`;
-
-
-        answer=
-        properSubset(A,B) ? "⊊" : "⊂";
-
-    }
-
-
-
-
-
-    // Proper subset
-
-    if(type==3){
-
-
-        B=[...A];
-
-
-        let extra=Math.floor(Math.random()*9)+1;
-
-        while(B.includes(extra)){
-            extra=Math.floor(Math.random()*9)+1;
-        }
-
-        B.push(extra);
-
-        B.sort();
-
-
-        question=
-        `{${A.join(",")}} ___ {${B.join(",")}}`;
-
-
-        answer="⊊";
-
-    }
-
-
-
-
-
-    // Contains
-
-    if(type==4){
-
-
-        B=[...new Set([...A])];
-
-
-        let extra=Math.floor(Math.random()*9)+1;
-
-        while(B.includes(extra)){
-            extra=Math.floor(Math.random()*9)+1;
-        }
-
-
-        A=[...B,extra];
-
-        A.sort();
-
-
-        question=
-        `{${A.join(",")}} ___ {${B.join(",")}}`;
-
-
-        answer="⊃";
+        answer=equal(A,B);
 
     }
 
@@ -311,28 +200,88 @@ function createQuestion(){
 
 
     // Not equal
+    if(type===2){
 
-    if(type==5){
+        if(equal(A,B)){
+            B.push(9);
+        }
 
+
+        statement=
+        `{${A.join(",")}} ≠ {${B.join(",")}}`;
+
+        answer=!equal(A,B);
+
+    }
+
+
+
+
+
+    // Subset
+    if(type===3){
+
+        if(Math.random()>0.5){
+
+            B=[...new Set([
+                ...A,
+                Math.floor(Math.random()*9)+1
+            ])];
+
+        }
+
+
+        statement=
+        `{${A.join(",")}} ⊂ {${B.join(",")}}`;
+
+        // equality allowed
+        answer=subset(A,B);
+
+    }
+
+
+
+
+
+    // Proper subset
+    if(type===4){
 
         B=[...A];
 
         let extra=Math.floor(Math.random()*9)+1;
 
-
         while(B.includes(extra)){
             extra=Math.floor(Math.random()*9)+1;
         }
 
-
         B.push(extra);
+        B.sort();
 
 
-        question=
-        `{${A.join(",")}} ___ {${B.join(",")}}`;
+        statement=
+        `{${A.join(",")}} ⊊ {${B.join(",")}}`;
+
+        answer=properSubset(A,B);
+
+    }
 
 
-        answer="≠";
+
+
+
+    // Contains
+    if(type===5){
+
+        A=[...new Set([
+            ...B,
+            Math.floor(Math.random()*9)+1
+        ])];
+
+
+        statement=
+        `{${A.join(",")}} ⊃ {${B.join(",")}}`;
+
+        answer=contains(A,B);
 
     }
 
@@ -340,59 +289,25 @@ function createQuestion(){
 
 
 
-    // True false style
+    // Random false traps
+    if(type===6){
 
-    if(type==6){
+        B=[...A];
 
-        let truth=Math.random()>0.5;
-
-
-        if(truth){
-
-            B=[...A,
-            Math.floor(Math.random()*9)+1];
-
-            question=
-            `{${A.join(",")}} ⊂ {${B.join(",")}}`;
-
-            answer="True";
-
-        }
-        else{
-
-            question=
-            `{${A.join(",")}} ⊊ {${A.join(",")}}`;
-
-            answer="False";
-
-        }
-
-    }
+        B.push(10);
 
 
+        statement=
+        `{${B.join(",")}} ⊊ {${A.join(",")}}`;
 
-
-    // Membership true false
-
-    if(type==7){
-
-
-        let x=A[Math.floor(Math.random()*A.length)];
-
-
-        question=
-        `${x} ∈ {${A.join(",")}}`;
-
-
-        answer="True";
-
+        answer=false;
 
     }
 
 
 
     return {
-        question,
+        statement,
         answer
     };
 
@@ -406,34 +321,18 @@ let current;
 
 
 
-function load(){
+function loadQuestion(){
+
+    current=generateQuestion();
 
 
-    current=createQuestion();
+    document.getElementById("question").innerHTML=
+    current.statement;
 
 
-
-    document.getElementById("question").innerHTML =
-    current.question;
-
-
-
-    let choices=[...symbols];
-
-
-    if(current.answer=="True" || current.answer=="False"){
-
-        choices=[
-            "True",
-            "False",
-            ...shuffle(symbols).slice(0,5)
-        ];
-
-    }
-
+    let choices=["True","False"];
 
     shuffle(choices);
-
 
 
     let area=document.getElementById("answers");
@@ -447,7 +346,6 @@ function load(){
 
         let btn=document.createElement("button");
 
-
         btn.innerHTML=choice;
 
         btn.className="option";
@@ -457,51 +355,43 @@ function load(){
         btn.onclick=function(){
 
 
-            if(choice==current.answer){
+            let chosen=(choice==="True");
+
+
+            if(chosen===current.answer){
 
                 score++;
 
                 btn.className="correct";
 
-            }
-
-            else{
+            }else{
 
                 btn.className="wrong";
 
             }
 
 
-
             document.getElementById("score").innerHTML=
             "Score: "+score;
 
 
-
-            setTimeout(load,700);
+            setTimeout(loadQuestion,700);
 
 
         };
 
 
-
         area.appendChild(btn);
 
-
     });
-
-
 
 }
 
 
 
-load();
-
-
+loadQuestion();
 
 </script>
-
 
 </body>
 </html>
