@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neon Alternating Chatlog</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --background: #080b14;
+      --panel: rgba(18, 24, 42, 0.88);
+      --text: #eef3ff;
+      --muted: #8d98b5;
+      --green: #31e981;
+      --green-dark: #123f2d;
+      --blue: #4da3ff;
+      --blue-dark: #132f55;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      overflow: hidden;
+      color: var(--text);
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(49, 233, 129, 0.14), transparent 30%),
+        radial-gradient(circle at 85% 80%, rgba(77, 163, 255, 0.16), transparent 30%),
+        var(--background);
+    }
+
+    .chat-app {
+      width: min(950px, 100%);
+      height: calc(100vh - 48px);
+      margin: auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .logo {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      font-size: 22px;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      box-shadow: 0 0 30px rgba(77, 163, 255, 0.28);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    header p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--green);
+      font-size: 0.82rem;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 13px var(--green);
+    }
+
+    #chatLog {
+      padding: 26px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    #chatLog::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #chatLog::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .message-row {
+      display: flex;
+      margin-bottom: 18px;
+      animation: appear 0.28s ease-out;
+    }
+
+    .message-row.green {
+      justify-content: flex-start;
+    }
+
+    .message-row.blue {
+      justify-content: flex-end;
+    }
+
+    .message {
+      position: relative;
+      max-width: min(75%, 650px);
+      padding: 14px 17px 11px;
+      border: 1px solid;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .message-row.green .message {
+      border-color: rgba(49, 233, 129, 0.38);
+      border-radius: 7px 21px 21px 21px;
+      background: linear-gradient(135deg, var(--green-dark), rgba(20, 65, 48, 0.65));
+      box-shadow: 0 8px 30px rgba(49, 233, 129, 0.09);
+    }
+
+    .message-row.blue .message {
+      border-color: rgba(77, 163, 255, 0.42);
+      border-radius: 21px 7px 21px 21px;
+      background: linear-gradient(135deg, var(--blue-dark), rgba(24, 57, 99, 0.68));
+      box-shadow: 0 8px 30px rgba(77, 163, 255, 0.1);
+    }
+
+    .message-number {
+      margin-bottom: 5px;
+      font-size: 0.69rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .green .message-number {
+      color: var(--green);
+    }
+
+    .blue .message-number {
+      color: var(--blue);
+      text-align: right;
+    }
+
+    .message-time {
+      display: block;
+      margin-top: 7px;
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 0.68rem;
+      text-align: right;
+    }
+
+    .empty-state {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+      font-size: 1.1rem;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 12px;
+      padding: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(5, 8, 16, 0.62);
+    }
+
+    #messageInput {
+      flex: 1;
+      min-width: 0;
+      padding: 15px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 17px;
+      outline: none;
+      color: var(--text);
+      font: inherit;
+      background: rgba(255, 255, 255, 0.055);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #messageInput:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.11);
+    }
+
+    #messageInput::placeholder {
+      color: #717c98;
+    }
+
+    #sendButton {
+      padding: 0 24px;
+      border: none;
+      border-radius: 17px;
+      cursor: pointer;
+      color: #071019;
+      font-weight: 800;
+      font-size: 0.95rem;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      box-shadow: 0 10px 28px rgba(77, 163, 255, 0.2);
+      transition: transform 0.18s, filter 0.18s;
+    }
+
+    #sendButton:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    #sendButton:active {
+      transform: translateY(0);
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+      }
+
+      .chat-app {
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+
+      .status {
+        display: none;
+      }
+
+      #chatLog {
+        padding: 18px;
+      }
+
+      .message {
+        max-width: 88%;
+      }
+
+      #sendButton {
+        padding: 0 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="chat-app">
+    <header>
+      <div class="logo">✦</div>
+
+      <div>
+        <h1>Neon Chatlog</h1>
+        <p>Messages alternate between green and blue.</p>
+      </div>
+
+      <div class="status">
+        <span class="status-dot"></span>
+        Online
+      </div>
+    </header>
+
+    <section id="chatLog" aria-live="polite">
+      <div class="empty-state" id="emptyState">
+        <div>
+          <strong>Your chatlog is empty</strong>
+          Enter a message below to begin.
+        </div>
+      </div>
+    </section>
+
+    <form class="input-area" id="messageForm">
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="Enter a message..."
+        maxlength="500"
+        autocomplete="off"
+        autofocus
+      />
+
+      <button id="sendButton" type="submit">Send</button>
+    </form>
+  </main>
+
+  <script>
+    const messageForm = document.getElementById("messageForm");
+    const messageInput = document.getElementById("messageInput");
+    const chatLog = document.getElementById("chatLog");
+    const emptyState = document.getElementById("emptyState");
+
+    let messageCount = 0;
+
+    function addMessage(text) {
+      messageCount++;
+
+      const colorClass = messageCount % 2 === 1 ? "green" : "blue";
+      const currentTime = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+
+      const row = document.createElement("div");
+      row.className = `message-row ${colorClass}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "message";
+
+      const label = document.createElement("div");
+      label.className = "message-number";
+      label.textContent = `${colorClass} message ${messageCount}`;
+
+      const messageText = document.createElement("div");
+      messageText.textContent = text;
+
+      const time = document.createElement("span");
+      time.className = "message-time";
+      time.textContent = currentTime;
+
+      bubble.append(label, messageText, time);
+      row.appendChild(bubble);
+      chatLog.appendChild(row);
+
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    messageForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const message = messageInput.value.trim();
+
+      if (!message) {
+        messageInput.focus();
+        return;
+      }
+
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      addMessage(message);
+      messageInput.value = "";
+      messageInput.focus();
+    });
+  </script>
+</body>
+</html>
