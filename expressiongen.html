@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>FACS Acting Trainer</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+    padding: 40px;
+}
+
+.box {
+    background: #222;
+    padding: 25px;
+    border-radius: 15px;
+    max-width: 600px;
+    margin: auto;
+}
+
+h1 {
+    color: #ffd166;
+}
+
+.label {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.result {
+    font-size: 22px;
+    margin: 15px;
+}
+
+button {
+    padding: 15px 25px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>FACS Acting Trainer</h1>
+
+<div class="label">Expression</div>
+<div class="result" id="expression">---</div>
+
+<div class="label">Action Units</div>
+<div class="result" id="aus">---</div>
+
+<div class="label">Character Thought</div>
+<div class="result" id="thought">---</div>
+
+<div class="label">Acting Challenge</div>
+<div class="result" id="challenge">---</div>
+
+<button onclick="generate()">Generate</button>
+
+</div>
+
+
+<script>
+
+const expressions = [
+
+{
+name:"Happiness",
+au:"AU6 + AU12",
+thought:"I just received something wonderful.",
+challenge:"Start neutral. Let the eyes react first, then allow the smile to appear."
+},
+
+{
+name:"Sadness",
+au:"AU1 + AU4 + AU15",
+thought:"I am trying to accept something painful.",
+challenge:"Keep the emotion internal. Do not exaggerate the mouth."
+},
+
+{
+name:"Anger",
+au:"AU4 + AU5 + AU7 + AU23",
+thought:"This person crossed a line.",
+challenge:"Build tension slowly. Control the face before speaking."
+},
+
+{
+name:"Fear",
+au:"AU1 + AU2 + AU4 + AU5 + AU20 + AU25",
+thought:"Something is wrong and I need to react.",
+challenge:"Eyes first, then the rest of the face follows."
+},
+
+{
+name:"Surprise",
+au:"AU1 + AU2 + AU5 + AU26",
+thought:"I cannot believe what I just saw.",
+challenge:"Create a sudden change from neutral."
+},
+
+{
+name:"Disgust",
+au:"AU9 + AU10",
+thought:"I reject what is in front of me.",
+challenge:"Let the nose and upper lip lead."
+},
+
+{
+name:"Contempt",
+au:"AU12 (one side) + AU14",
+thought:"I feel superior to this person.",
+challenge:"Keep it small. Asymmetry is important."
+},
+
+{
+name:"Confusion",
+au:"AU4 + AU7 + AU14",
+thought:"Something does not make sense.",
+challenge:"Let curiosity and doubt compete."
+},
+
+{
+name:"Doubt",
+au:"AU4 + AU14",
+thought:"I am not convinced.",
+challenge:"Use the eyes more than the mouth."
+},
+
+{
+name:"Concern",
+au:"AU1 + AU4",
+thought:"I care about what is happening.",
+challenge:"Make it subtle and controlled."
+},
+
+{
+name:"Embarrassment",
+au:"AU12 + AU24 + AU25",
+thought:"I hope nobody noticed that.",
+challenge:"Reduce intensity and add self-consciousness."
+},
+
+{
+name:"Pride",
+au:"AU12 + AU16",
+thought:"I achieved something important.",
+challenge:"Stay confident without becoming arrogant."
+},
+
+{
+name:"Smirk",
+au:"AU12 (one side) + AU14",
+thought:"I know something you do not.",
+challenge:"Use restraint. A tiny movement works better."
+},
+
+{
+name:"Pain",
+au:"AU4 + AU6 + AU7 + AU9 + AU10",
+thought:"I am trying to endure this.",
+challenge:"Avoid making it theatrical."
+},
+
+{
+name:"Tiredness",
+au:"AU41 + AU43",
+thought:"I have no energy left.",
+challenge:"Lower facial activity."
+},
+
+{
+name:"Thinking",
+au:"AU4 + AU7 + AU14",
+thought:"I am solving a problem.",
+challenge:"Let the eyes search before the mouth reacts."
+},
+
+{
+name:"Interest",
+au:"AU1 + AU2 + AU5 + AU25",
+thought:"This is fascinating.",
+challenge:"Open attention rather than surprise."
+}
+
+];
+
+
+function generate(){
+
+let random = expressions[Math.floor(Math.random()*expressions.length)];
+
+document.getElementById("expression").innerHTML = random.name;
+
+document.getElementById("aus").innerHTML = random.au;
+
+document.getElementById("thought").innerHTML = '"' + random.thought + '"';
+
+document.getElementById("challenge").innerHTML = random.challenge;
+
+}
+
+</script>
+
+</body>
+</html>
