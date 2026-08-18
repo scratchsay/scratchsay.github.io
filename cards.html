@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emotion FACS Cards</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #080a0f;
+      --panel: rgba(19, 22, 31, 0.92);
+      --panel-2: #151923;
+      --text: #f7f8fb;
+      --muted: #9ca4b5;
+      --line: rgba(255,255,255,0.09);
+      --accent: #9f8cff;
+      --accent2: #65d6ff;
+      --success: #7ee7b5;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: var(--text);
+      background:
+        radial-gradient(circle at 25% 10%, rgba(159,140,255,.18), transparent 35%),
+        radial-gradient(circle at 80% 85%, rgba(101,214,255,.12), transparent 30%),
+        var(--bg);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: min(100%, 560px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .title-area h1 {
+      font-size: 22px;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .title-area p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .counter {
+      white-space: nowrap;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .card-stage {
+      position: relative;
+      height: 610px;
+      perspective: 1000px;
+    }
+
+    .behind-card {
+      position: absolute;
+      left: 3%;
+      right: 3%;
+      top: 18px;
+      bottom: 0;
+
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.035);
+
+      transform: scale(.96);
+      opacity: .65;
+    }
+
+    .card {
+      position: absolute;
+      inset: 0;
+
+      display: flex;
+      flex-direction: column;
+
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,.11);
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.07),
+          rgba(255,255,255,.015)
+        ),
+        var(--panel);
+
+      box-shadow:
+        0 30px 80px rgba(0,0,0,.4),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+      backdrop-filter: blur(22px);
+
+      touch-action: pan-y;
+      user-select: none;
+      overflow: hidden;
+
+      transform: translateX(0) rotate(0);
+      transition:
+        transform 320ms cubic-bezier(.2,.8,.2,1),
+        opacity 260ms ease;
+    }
+
+    .card.dragging {
+      transition: none;
+      cursor: grabbing;
+    }
+
+    .card-content {
+      padding: 28px;
+      overflow-y: auto;
+      flex: 1;
+      scrollbar-width: thin;
+    }
+
+    .number {
+      width: 38px;
+      height: 38px;
+
+      border-radius: 12px;
+
+      display: grid;
+      place-items: center;
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(159,140,255,.22),
+          rgba(101,214,255,.12)
+        );
+
+      border: 1px solid rgba(159,140,255,.25);
+
+      color: #d9d1ff;
+      font-weight: 700;
+      font-size: 13px;
+
+      margin-bottom: 17px;
+    }
+
+    .emotion-name {
+      font-size: clamp(30px, 7vw, 44px);
+      line-height: 1;
+      margin: 0 0 9px;
+      letter-spacing: -.045em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 27px;
+    }
+
+    .section {
+      padding: 17px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+
+      text-transform: uppercase;
+      letter-spacing: .12em;
+
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+
+      margin-bottom: 10px;
+    }
+
+    .section-value {
+      line-height: 1.65;
+      font-size: 14px;
+      color: #e8eaf0;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .timeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .time {
+      flex: 0 0 auto;
+
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+
+      color: var(--accent2);
+
+      background: rgba(101,214,255,.08);
+      border: 1px solid rgba(101,214,255,.16);
+
+      border-radius: 7px;
+      padding: 4px 7px;
+      margin-top: 1px;
+    }
+
+    .action {
+      line-height: 1.55;
+    }
+
+    .au {
+      display: inline-block;
+
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 700;
+      font-size: .9em;
+
+      color: #d9d2ff;
+
+      padding: 1px 6px;
+
+      border-radius: 6px;
+      background: rgba(159,140,255,.1);
+      border: 1px solid rgba(159,140,255,.16);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 15px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+    }
+
+    .stat-name {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-weight: 650;
+      line-height: 1.4;
+      font-size: 13px;
+    }
+
+    .next-preview {
+      border-top: 1px solid var(--line);
+
+      padding: 14px 24px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+
+      background: rgba(0,0,0,.13);
+    }
+
+    .next-preview small {
+      display: block;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-size: 9px;
+      margin-bottom: 3px;
+    }
+
+    .next-preview strong {
+      font-size: 13px;
+    }
+
+    .swipe-hint {
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 56px 1fr 56px;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 0;
+      font: inherit;
+      cursor: pointer;
+
+      transition:
+        transform .15s ease,
+        background .15s ease,
+        border-color .15s ease;
+    }
+
+    button:active {
+      transform: scale(.96);
+    }
+
+    .arrow-btn {
+      width: 56px;
+      height: 56px;
+
+      border-radius: 18px;
+      border: 1px solid var(--line);
+
+      color: white;
+      background: rgba(255,255,255,.055);
+
+      font-size: 21px;
+    }
+
+    .arrow-btn:hover {
+      background: rgba(255,255,255,.09);
+    }
+
+    .random-btn {
+      min-height: 56px;
+      border-radius: 18px;
+
+      color: white;
+      font-weight: 700;
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(159,140,255,.85),
+          rgba(111,96,224,.9)
+        );
+
+      box-shadow: 0 10px 30px rgba(120,100,255,.18);
+    }
+
+    .random-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .progress {
+      margin-top: 14px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 300ms ease;
+    }
+
+    .keyboard-hint {
+      text-align: center;
+      margin-top: 12px;
+      color: #6f7584;
+      font-size: 11px;
+    }
+
+    .swipe-label {
+      position: absolute;
+      z-index: 5;
+      top: 30px;
+
+      padding: 9px 13px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .1em;
+
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .swipe-label.prev {
+      right: 24px;
+      color: #ffbfce;
+      border: 1px solid rgba(255,100,140,.3);
+      background: rgba(255,100,140,.1);
+      transform: rotate(8deg);
+    }
+
+    .swipe-label.next {
+      left: 24px;
+      color: #aaf4d2;
+      border: 1px solid rgba(80,220,160,.3);
+      background: rgba(80,220,160,.1);
+      transform: rotate(-8deg);
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 14px;
+        align-items: flex-start;
+      }
+
+      .card-stage {
+        height: min(640px, calc(100vh - 190px));
+        min-height: 510px;
+      }
+
+      .card-content {
+        padding: 23px 21px;
+      }
+
+      .emotion-name {
+        font-size: 34px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title-area">
+        <h1>Emotion Cards</h1>
+        <p>FACS action units & approximate timing</p>
+      </div>
+
+      <div class="counter" id="counter">
+        1 / 24
+      </div>
+    </header>
+
+    <section class="card-stage">
+      <div class="behind-card"></div>
+
+      <article class="card" id="card">
+        <div class="swipe-label next" id="nextLabel">
+          NEXT →
+        </div>
+
+        <div class="swipe-label prev" id="prevLabel">
+          ← BACK
+        </div>
+
+        <div class="card-content">
+          <div class="number" id="number"></div>
+
+          <h2 class="emotion-name" id="emotionName"></h2>
+
+          <div class="subtitle">
+            Facial Action Coding System sequence
+          </div>
+
+          <section class="section">
+            <div class="section-label">
+              ⚡ Onset sequence
+            </div>
+
+            <div class="section-value timeline" id="onset"></div>
+          </section>
+
+          <section class="section">
+            <div class="section-label">
+              ◉ Timing
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-name">Apex / Hold</div>
+                <div class="stat-value" id="apex"></div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-name">Total Duration</div>
+                <div class="stat-value" id="total"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-label">
+              ↘ Offset
+            </div>
+
+            <div class="section-value" id="offset"></div>
+          </section>
+        </div>
+
+        <footer class="next-preview">
+          <div>
+            <small>Up next</small>
+            <strong id="nextEmotion"></strong>
+          </div>
+
+          <span class="swipe-hint">
+            swipe ←
+          </span>
+        </footer>
+      </article>
+    </section>
+
+    <div class="controls">
+      <button
+        class="arrow-btn"
+        id="prevBtn"
+        aria-label="Previous emotion"
+        title="Previous emotion"
+      >
+        ←
+      </button>
+
+      <button
+        class="random-btn"
+        id="randomBtn"
+      >
+        ✦ Random Emotion
+      </button>
+
+      <button
+        class="arrow-btn"
+        id="nextBtn"
+        aria-label="Next emotion"
+        title="Next emotion"
+      >
+        →
+      </button>
+    </div>
+
+    <div class="progress">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="keyboard-hint">
+      Swipe the card or use ← and → on your keyboard
+    </div>
+  </main>
+
+  <script>
+    /*
+      Excluded:
+      - Calmness
+      - Nostalgia
+      - Romance / affectionate response
+    */
+
+    const emotions = [
+      {
+        number: 1,
+        name: "Admiration",
+        onset: [
+          ["0.0s", "Inner Brow Raiser", "AU1"],
+          ["+0.2–0.6s", "Lip Corner Puller", "AU12"]
+        ],
+        apex: "0.5–2s",
+        offset: "AU1 ↓ → AU12 ↓ approximately 0.3–1s later",
+        total: "~1–4s"
+      },
+
+      {
+        number: 2,
+        name: "Adoration",
+        onset: [
+          ["0.0s", "Lip Corner Puller", "AU12"],
+          ["+0.1–0.4s", "Cheek Raiser", "AU6"]
+        ],
+        apex: "1–4s",
+        offset: "AU6 and AU12 gradually ↓ together",
+        total: "~2–6s+"
+      },
+
+      {
+        number: 3,
+        name: "Aesthetic appreciation",
+        onset: [
+          ["0.0s", "Inner + Outer Brow Raiser", "AU1+2"],
+          ["+0.1–0.4s", "Upper Lid Raiser", "AU5"]
+        ],
+        apex: "0.5–2s",
+        offset: "AU5 ↓ → AU1+2 ↓ approximately 0.2–0.8s later",
+        total: "~1–4s"
+      },
+
+      {
+        number: 4,
+        name: "Amusement",
+        onset: [
+          ["0.0s", "Lip Corner Puller", "AU12"],
+          ["+0.1–0.3s", "Cheek Raiser", "AU6"],
+          ["+0.1–0.4s", "Lips Part", "AU25"]
+        ],
+        apex: "0.5–3s",
+        offset: "AU25 ↓ → AU6 + AU12 gradually ↓",
+        total: "~1–5s+"
+      },
+
+      {
+        number: 5,
+        name: "Anger",
+        onset: [
+          ["0.0s", "Brow Lowerer", "AU4"],
+          ["+0.1–0.4s", "Lid Tightener", "AU7"],
+          ["+0.1–0.5s", "Lip Tightener / Pressor", "AU23/24"]
+        ],
+        apex: "0.5–3s+",
+        offset: "AU23/24 ↓ → AU7 ↓ → AU4 ↓",
+        total: "~1–5s+"
+      },
+
+      {
+        number: 6,
+        name: "Anxiety",
+        onset: [
+          ["0.0s", "Inner Brow Raiser + Brow Lowerer", "AU1+4"],
+          ["+0.1–0.4s", "Upper Lid Raiser", "AU5"],
+          ["+0.2–0.7s", "Lip Stretcher", "AU20"]
+        ],
+        apex: "Often fluctuates rather than holds",
+        offset: "AU20 ↓ → AU5 ↓ → AU1+4 ↓",
+        total: "~1–5s; can recur"
+      },
+
+      {
+        number: 7,
+        name: "Awe",
+        onset: [
+          ["0.0s", "Inner + Outer Brow Raiser", "AU1+2"],
+          ["+0.05–0.25s", "Upper Lid Raiser", "AU5"],
+          ["+0.1–0.4s", "Jaw Drop", "AU26"]
+        ],
+        apex: "0.5–2s",
+        offset: "AU26 ↓ → AU5 ↓ → AU1+2 ↓",
+        total: "~1–4s"
+      },
+
+      {
+        number: 8,
+        name: "Awkwardness",
+        onset: [
+          ["0.0s", "Small Lip Corner Puller", "AU12"],
+          ["+0.2–0.8s", "Lip Suck", "AU28"],
+          ["Variable", "Blink may occur", "AU45"]
+        ],
+        apex: "~0.5–2s",
+        offset: "AU28 ↓ → AU12 ↓; blinks occur independently",
+        total: "~1–4s"
+      },
+
+      {
+        number: 9,
+        name: "Boredom",
+        onset: [
+          ["Gradual", "Eyelid activity decreases", ""],
+          ["Variable", "Longer closure may occur", "AU43"]
+        ],
+        apex: "Seconds+",
+        offset: "Gradual return toward normal eyelid activity",
+        total: "Highly variable"
+      },
+
+      {
+        number: 11,
+        name: "Confusion",
+        onset: [
+          ["0.0s", "Brow Lowerer", "AU4"],
+          ["+0.2–0.6s", "Sometimes unilateral Inner Brow Raiser", "AU1"],
+          ["+0.2–0.8s", "Chin Raiser", "AU17"]
+        ],
+        apex: "0.5–2s",
+        offset: "AU17 ↓ → AU1 / AU4 ↓",
+        total: "~1–4s"
+      },
+
+      {
+        number: 12,
+        name: "Craving / wanting",
+        onset: [
+          ["0.0s", "Lips Part or Lip Pucker", "AU25 / AU18"],
+          ["+0.2–0.7s", "Additional mouth movement", ""]
+        ],
+        apex: "~0.5–2s",
+        offset: "Mouth actions gradually ↓",
+        total: "~1–3s"
+      },
+
+      {
+        number: 13,
+        name: "Disgust",
+        onset: [
+          ["0.0s", "Nose Wrinkler", "AU9"],
+          ["+0.05–0.3s", "Upper Lip Raiser", "AU10"],
+          ["Optional", "Lower Lip Depressor", "AU16"]
+        ],
+        apex: "0.3–1.5s",
+        offset: "AU16 ↓ → AU10 ↓ → AU9 ↓",
+        total: "~0.7–3s"
+      },
+
+      {
+        number: 14,
+        name: "Empathic pain",
+        onset: [
+          ["0.0s", "Inner Brow Raiser + Brow Lowerer", "AU1+4"],
+          ["+0.2–0.7s", "Lip Corner Depressor", "AU15"]
+        ],
+        apex: "0.5–2s",
+        offset: "AU15 ↓ → AU1+4 ↓",
+        total: "~1–4s"
+      },
+
+      {
+        number: 15,
+        name: "Entrancement",
+        onset: [
+          ["0.0s", "Upper Lid Raiser", "AU5"],
+          ["+0.2–0.8s", "Slight Lips Part", "AU25"]
+        ],
+        apex: "1–4s+",
+        offset: "AU25 ↓ → AU5 ↓",
+        total: "~2–6s+"
+      },
+
+      {
+        number: 16,
+        name: "Excitement",
+        onset: [
+          ["0.0s", "Upper Lid Raiser", "AU5"],
+          ["+0.05–0.3s", "Lip Corner Puller", "AU12"],
+          ["+0.1–0.3s", "Cheek Raiser", "AU6"],
+          ["Afterward", "Lips Part", "AU25"]
+        ],
+        apex: "0.5–3s",
+        offset: "AU25 ↓ → AU5 ↓ → AU6 + AU12 ↓",
+        total: "~1–5s+"
+      },
+
+      {
+        number: 17,
+        name: "Fear",
+        onset: [
+          ["0.0s", "Inner/Outer Brow Raiser + Brow Lowerer", "AU1+2+4"],
+          ["+0.05–0.25s", "Upper Lid Raiser", "AU5"],
+          ["+0.1–0.4s", "Lip Stretcher", "AU20"],
+          ["Afterward", "Lips Part / Jaw Drop", "AU25/26"]
+        ],
+        apex: "~0.2–1s",
+        offset: "Mouth ↓ → AU5 ↓ → brow complex ↓",
+        total: "~0.5–3s"
+      },
+
+      {
+        number: 18,
+        name: "Horror",
+        onset: [
+          ["0.0s", "Inner + Outer Brow Raiser", "AU1+2"],
+          ["+0.05–0.2s", "Upper Lid Raiser", "AU5"],
+          ["+0.1–0.3s", "Lip Stretcher", "AU20"],
+          ["+0.1–0.4s", "Mouth Stretch", "AU27"]
+        ],
+        apex: "~0.3–1.5s",
+        offset: "AU27 ↓ → AU20 ↓ → AU5 ↓ → AU1+2 ↓",
+        total: "~1–3s"
+      },
+
+      {
+        number: 19,
+        name: "Interest",
+        onset: [
+          ["0.0s", "Inner / Outer Brow Raiser", "AU1/2"],
+          ["+0.1–0.5s", "Mild Upper Lid Raiser", "AU5"]
+        ],
+        apex: "~1–3s",
+        offset: "AU5 ↓ → brows ↓",
+        total: "~2–5s"
+      },
+
+      {
+        number: 20,
+        name: "Joy",
+        onset: [
+          ["0.0s", "Lip Corner Puller", "AU12"],
+          ["+0.1–0.4s", "Cheek Raiser", "AU6"]
+        ],
+        apex: "~1–4s",
+        offset: "AU6 and AU12 gradually ↓, often overlapping",
+        total: "~2–6s+"
+      },
+
+      {
+        number: 22,
+        name: "Relief",
+        onset: [
+          ["Initial", "Tension release", ""],
+          ["Then", "Lips Part", "AU25"],
+          ["+0.2–0.8s", "Lip Corner Puller", "AU12"],
+          ["Possible", "Cheek Raiser", "AU6"]
+        ],
+        apex: "~1–3s",
+        offset: "AU6 / AU12 ↓ → AU25 returns toward neutral",
+        total: "~2–5s"
+      },
+
+      {
+        number: 24,
+        name: "Sadness",
+        onset: [
+          ["0.0s", "Inner Brow Raiser + Brow Lowerer", "AU1+4"],
+          ["+0.3–1.0s", "Lip Corner Depressor", "AU15"],
+          ["+0.2–0.7s", "Possible Chin Raiser", "AU17"]
+        ],
+        apex: "~1–4s+",
+        offset: "AU17 / AU15 ↓ → brow actions gradually ↓",
+        total: "~2–6s+"
+      },
+
+      {
+        number: 25,
+        name: "Satisfaction",
+        onset: [
+          ["0.0s", "Lip Corner Puller", "AU12"],
+          ["+0.2–0.6s", "Mild Cheek Raiser", "AU6"]
+        ],
+        apex: "~1–3s",
+        offset: "AU6 ↓ → AU12 ↓",
+        total: "~2–5s"
+      },
+
+      {
+        number: 26,
+        name: "Surprise",
+        onset: [
+          ["0.0s", "Inner + Outer Brow Raiser", "AU1+2"],
+          ["+0.05–0.20s", "Upper Lid Raiser", "AU5"],
+          ["+0.05–0.30s", "Jaw Drop", "AU26"]
+        ],
+        apex: "Very short: ~0.2–1s",
+        offset:
+          "AU26 ↓ → AU5 ↓ → AU1+2 ↓, or immediately transforms into another expression",
+        total: "~0.5–2s"
+      },
+
+      {
+        number: 27,
+        name: "Triumph",
+        onset: [
+          ["0.0s", "Lip Corner Puller", "AU12"],
+          ["+0.1–0.4s", "Cheek Raiser", "AU6"],
+          ["+0.1–0.5s", "Lips Part", "AU25"]
+        ],
+        apex: "~1–4s",
+        offset: "AU25 ↓ → AU6 + AU12 ↓",
+        total: "~2–6s"
+      }
+    ];
+
+    let currentIndex = 0;
+
+    const card = document.getElementById("card");
+    const numberEl = document.getElementById("number");
+    const emotionNameEl = document.getElementById("emotionName");
+    const onsetEl = document.getElementById("onset");
+    const apexEl = document.getElementById("apex");
+    const offsetEl = document.getElementById("offset");
+    const totalEl = document.getElementById("total");
+    const nextEmotionEl = document.getElementById("nextEmotion");
+    const counterEl = document.getElementById("counter");
+    const progressFill = document.getElementById("progressFill");
+
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const randomBtn = document.getElementById("randomBtn");
+
+    const nextLabel = document.getElementById("nextLabel");
+    const prevLabel = document.getElementById("prevLabel");
+
+    function formatAU(text) {
+      if (!text) return "";
+
+      return text
+        .replace(
+          /(AU\d+(?:\+\d+)*(?:\/\d+)?)/g,
+          '<span class="au">$1</span>'
+        );
+    }
+
+    function renderCard() {
+      const emotion = emotions[currentIndex];
+      const nextIndex = (currentIndex + 1) % emotions.length;
+
+      numberEl.textContent = String(emotion.number).padStart(2, "0");
+      emotionNameEl.textContent = emotion.name;
+
+      onsetEl.innerHTML = emotion.onset
+        .map(([time, action, au]) => {
+          return `
+            <div class="timeline-step">
+              <span class="time">${time}</span>
+
+              <div class="action">
+                ${action}
+                ${
+                  au
+                    ? ` <span class="au">${au}</span>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      apexEl.innerHTML = formatAU(emotion.apex);
+      offsetEl.innerHTML = formatAU(emotion.offset);
+      totalEl.innerHTML = formatAU(emotion.total);
+
+      nextEmotionEl.textContent = emotions[nextIndex].name;
+
+      counterEl.textContent =
+        `${currentIndex + 1} / ${emotions.length}`;
+
+      progressFill.style.width =
+        `${((currentIndex + 1) / emotions.length) * 100}%`;
+
+      // Return scroll position to top when switching cards
+      document.querySelector(".card-content").scrollTop = 0;
+    }
+
+    function changeCard(direction) {
+      const outgoingX =
+        direction === "next"
+          ? -window.innerWidth
+          : window.innerWidth;
+
+      card.style.transform =
+        `translateX(${outgoingX}px) rotate(${direction === "next" ? -10 : 10}deg)`;
+
+      card.style.opacity = "0";
+
+      setTimeout(() => {
+        if (direction === "next") {
+          currentIndex =
+            (currentIndex + 1) % emotions.length;
+        } else {
+          currentIndex =
+            (currentIndex - 1 + emotions.length) %
+            emotions.length;
+        }
+
+        renderCard();
+
+        // Enter from opposite side
+        card.style.transition = "none";
+
+        card.style.transform =
+          `translateX(${direction === "next" ? window.innerWidth : -window.innerWidth}px)
+           rotate(${direction === "next" ? 8 : -8}deg)`;
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            card.style.transition = "";
+            card.style.opacity = "1";
+            card.style.transform =
+              "translateX(0) rotate(0)";
+          });
+        });
+      }, 240);
+    }
+
+    function randomEmotion() {
+      let newIndex = currentIndex;
+
+      // Avoid randomly selecting the same emotion
+      while (
+        newIndex === currentIndex &&
+        emotions.length > 1
+      ) {
+        newIndex =
+          Math.floor(Math.random() * emotions.length);
+      }
+
+      card.style.transform =
+        "scale(.92) rotate(-2deg)";
+
+      card.style.opacity = "0";
+
+      setTimeout(() => {
+        currentIndex = newIndex;
+        renderCard();
+
+        card.style.transition = "none";
+        card.style.transform =
+          "scale(1.05) rotate(2deg)";
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            card.style.transition = "";
+            card.style.opacity = "1";
+            card.style.transform =
+              "scale(1) rotate(0)";
+          });
+        });
+      }, 220);
+    }
+
+    nextBtn.addEventListener("click", () => {
+      changeCard("next");
+    });
+
+    prevBtn.addEventListener("click", () => {
+      changeCard("prev");
+    });
+
+    randomBtn.addEventListener("click", randomEmotion);
+
+    // Keyboard navigation
+    document.addEventListener("keydown", event => {
+      if (event.key === "ArrowRight") {
+        changeCard("next");
+      }
+
+      if (event.key === "ArrowLeft") {
+        changeCard("prev");
+      }
+
+      if (
+        event.key.toLowerCase() === "r"
+      ) {
+        randomEmotion();
+      }
+    });
+
+    /*
+      Swipe / drag support
+    */
+
+    let startX = 0;
+    let currentX = 0;
+    let dragging = false;
+
+    function pointerStart(event) {
+      dragging = true;
+
+      startX =
+        event.clientX ??
+        event.touches?.[0]?.clientX ??
+        0;
+
+      currentX = startX;
+
+      card.classList.add("dragging");
+    }
+
+    function pointerMove(event) {
+      if (!dragging) return;
+
+      currentX =
+        event.clientX ??
+        event.touches?.[0]?.clientX ??
+        currentX;
+
+      const deltaX = currentX - startX;
+
+      const rotation = deltaX / 25;
+
+      card.style.transform =
+        `translateX(${deltaX}px) rotate(${rotation}deg)`;
+
+      const labelOpacity =
+        Math.min(Math.abs(deltaX) / 100, 1);
+
+      if (deltaX < 0) {
+        nextLabel.style.opacity = labelOpacity;
+        prevLabel.style.opacity = 0;
+      } else {
+        prevLabel.style.opacity = labelOpacity;
+        nextLabel.style.opacity = 0;
+      }
+    }
+
+    function pointerEnd() {
+      if (!dragging) return;
+
+      dragging = false;
+      card.classList.remove("dragging");
+
+      const deltaX = currentX - startX;
+
+      nextLabel.style.opacity = 0;
+      prevLabel.style.opacity = 0;
+
+      const threshold = 90;
+
+      if (deltaX < -threshold) {
+        changeCard("next");
+      } else if (deltaX > threshold) {
+        changeCard("prev");
+      } else {
+        card.style.transform =
+          "translateX(0) rotate(0)";
+      }
+    }
+
+    // Mouse
+    card.addEventListener("mousedown", pointerStart);
+    window.addEventListener("mousemove", pointerMove);
+    window.addEventListener("mouseup", pointerEnd);
+
+    // Touch
+    card.addEventListener(
+      "touchstart",
+      pointerStart,
+      { passive: true }
+    );
+
+    card.addEventListener(
+      "touchmove",
+      pointerMove,
+      { passive: true }
+    );
+
+    card.addEventListener(
+      "touchend",
+      pointerEnd
+    );
+
+    renderCard();
+  </script>
+</body>
+</html>
